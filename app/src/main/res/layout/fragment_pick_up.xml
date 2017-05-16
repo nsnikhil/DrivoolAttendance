@@ -1,0 +1,39 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    style="@style/matchParent"
+    tools:context="com.nrs.nsnik.drivoolattendance.fragments.PickUpFragment">
+
+
+    <include layout="@layout/trip_counter"
+        android:elevation="@dimen/toolbarElevation"
+        android:id="@+id/pickUpCounterContainer"
+        android:visibility="gone"
+        android:layout_width="match_parent"
+        android:animateLayoutChanges="true"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"/>
+
+    <android.support.v7.widget.RecyclerView
+        android:id="@+id/pickUpRecyclerView"
+        style="@style/matchParent"
+        android:layout_above="@id/pickUpCounterContainer"
+        android:layout_below="@id/mainToolBar" />
+
+    <Button
+        android:id="@+id/pickUpStartTrip"
+        style="@style/Widget.AppCompat.Button.Borderless"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerInParent="true"
+        android:text="@string/startTrip"
+        android:textColor="@color/colorAccent"
+        android:textSize="24sp"
+        android:textStyle="bold" />
+
+    <com.claudiodegio.msv.MaterialSearchView
+        android:id="@+id/pickUpSearchView"
+        android:inputType="number"
+        style="@style/matchParent"
+        android:elevation="5dp" />
+
+</RelativeLayout>

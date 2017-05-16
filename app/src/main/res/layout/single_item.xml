@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.v7.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:card_view="http://schemas.android.com/apk/res-auto"
+    android:background="?android:attr/selectableItemBackground"
+    android:focusable="true"
+    android:clickable="true"
+    android:layout_height="@dimen/drawerWidth"
+    android:layout_margin="@dimen/eight"
+    android:id="@+id/itemCard"
+    card_view:cardCornerRadius="3dp"
+    card_view:cardElevation="4dp"
+    card_view:cardMaxElevation="8dp"
+    style="@style/stretchedVertically">
+
+    <ImageView
+        android:contentDescription="@string/imageContentInfo"
+        android:src="@drawable/ic_done_black_24dp"
+        android:layout_gravity="end"
+        android:visibility="gone"
+        android:background="@drawable/circle"
+        android:layout_margin="@dimen/eight"
+        android:id="@+id/itemCheckedStatus"
+        style="@style/twentyfour" />
+
+    <ImageView
+        android:foreground="?android:attr/selectableItemBackground"
+        android:contentDescription="@string/imageContentInfo"
+        android:id="@+id/itemImage"
+        style="@style/matchParent" />
+
+    <TextView
+        style="@style/stretchedVertically"
+        android:background="@color/colorPrimaryDark"
+        android:padding="@dimen/sixteen"
+        android:textStyle="bold"
+        android:layout_gravity="bottom"
+        android:textColor="@color/white"
+        android:textSize="20sp"
+        android:id="@+id/itemName"
+        android:text="@string/app_name"/>
+
+</android.support.v7.widget.CardView>

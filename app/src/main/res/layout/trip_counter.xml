@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    style="@style/horizontalLinearLayout"
+    android:layout_height="wrap_content">
+
+    <LinearLayout
+        style="@style/horizontalLinearLayout"
+        android:padding="@dimen/eight"
+        android:background="@color/colorPrimary"
+        android:layout_width="0dp"
+        android:layout_weight="1"
+        android:gravity="center_horizontal"
+        android:layout_height="wrap_content">
+
+    <TextView
+        android:text="@string/no"
+        android:gravity="center"
+        android:textStyle="bold"
+        android:textColor="@color/white"
+        android:id="@+id/counterCurrent"
+        android:layout_height="48dp"
+        android:layout_width="48dp"/>
+
+    <TextView
+        android:text="@string/presentcount"
+        android:textStyle="bold"
+        android:textSize="14sp"
+        android:gravity="center_vertical"
+        android:textColor="@color/white"
+        style="@style/wrapContent"/>
+
+    </LinearLayout>
+
+
+    <LinearLayout
+        style="@style/horizontalLinearLayout"
+        android:layout_width="0dp"
+        android:padding="@dimen/eight"
+        android:background="@color/colorPrimaryDark"
+        android:layout_weight="1"
+        android:gravity="center_horizontal"
+        android:layout_height="wrap_content">
+
+        <TextView
+            android:text="@string/no"
+            android:gravity="center"
+            android:textStyle="bold"
+            android:textColor="@color/white"
+            android:id="@+id/counterTotal"
+            android:layout_height="48dp"
+            android:layout_width="48dp"/>
+
+        <TextView
+            android:text="@string/totalcount"
+            android:textStyle="bold"
+            android:textSize="14sp"
+            android:gravity="center_vertical"
+            android:textColor="@color/white"
+            style="@style/wrapContent"/>
+
+    </LinearLayout>
+
+</LinearLayout>
