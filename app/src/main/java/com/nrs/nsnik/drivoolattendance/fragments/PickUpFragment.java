@@ -1,13 +1,18 @@
 package com.nrs.nsnik.drivoolattendance.fragments;
 
 
+import android.app.Activity;
+import android.content.ContentProvider;
+import android.content.ContentValues;
 import android.content.Intent;
+import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.RectF;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.GridLayoutManager;
@@ -16,23 +21,23 @@ import android.support.v7.widget.helper.ItemTouchHelper;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
-import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
-import com.claudiodegio.msv.MaterialSearchView;
-import com.claudiodegio.msv.OnSearchViewListener;
-import com.nrs.nsnik.drivoolattendance.MainActivity;
 import com.nrs.nsnik.drivoolattendance.Objects.StudentObject;
 import com.nrs.nsnik.drivoolattendance.R;
 import com.nrs.nsnik.drivoolattendance.adapters.ListAdapter;
+import com.nrs.nsnik.drivoolattendance.data.TableHelper;
 import com.nrs.nsnik.drivoolattendance.data.TableNames;
 import com.nrs.nsnik.drivoolattendance.fragments.dialogFragments.FakeListDialogFragment;
 import com.nrs.nsnik.drivoolattendance.interfaces.FakeItems;
+import com.nrs.nsnik.drivoolattendance.interfaces.PickUpInterface;
 import com.nrs.nsnik.drivoolattendance.services.SendSmsService;
+
+import java.util.Calendar;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -55,18 +60,16 @@ public class PickUpFragment extends Fragment implements FakeItems{
     public PickUpFragment() {
     }
 
-
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        View v =  inflater.inflate(R.layout.fragment_pick_up, container, false);
-        mUnbinder = ButterKnife.bind(this,v);
+        View v = inflater.inflate(R.layout.fragment_pick_up, container, false);
+        mUnbinder = ButterKnife.bind(this, v);
         initialize();
         listener();
         mThisFragment = this;
         setHasOptionsMenu(true);
         return v;
     }
-
 
     @Override
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
@@ -105,13 +108,31 @@ public class PickUpFragment extends Fragment implements FakeItems{
                 if (direction == ItemTouchHelper.LEFT){
                     mListAdapter.removeItem(viewHolder.getAdapterPosition());
                 } else {
-                    StudentObject object = mListAdapter.getItem(viewHolder.getAdapterPosition());;
+
+                    //StartService
+                    StudentObject object = mListAdapter.getItem(viewHolder.getAdapterPosition());
+
                     Intent message = new Intent(getActivity(),SendSmsService.class);
                     message.putExtra(getResources().getString(R.string.intentKeyMessage),object.getmName()+" picked up");
                     message.putExtra(getResources().getString(R.string.intentkeyPhoneNo),object.getmPhoneNo());
                     getActivity().startService(message);
+
+                    //RemoveItem
                     mListAdapter.removeItem(viewHolder.getAdapterPosition());
+
+                    //UpdateCounter
                     mPresentTotal.setText(String.valueOf(++mCount));
+
+
+                    //markStudent
+                    Calendar calendar = Calendar.getInstance();
+
+                    ContentValues contentValues = new ContentValues();
+                    contentValues.put(TableNames.table1.mStudentId,object.getnStudentId());
+                    contentValues.put(TableNames.table1.mBoardingTime,calendar.getTimeInMillis());
+
+                    getActivity().getContentResolver().insert(TableNames.mAttendanceContentUri,contentValues);
+
                 }
             }
 
@@ -154,14 +175,8 @@ public class PickUpFragment extends Fragment implements FakeItems{
     }
 
     @Override
-    public void onStop() {
-        mUnbinder.unbind();
-        super.onStop();
-    }
-
-    @Override
     public void onDestroy() {
-        getActivity().getContentResolver().delete(TableNames.mContentUri,null,null);
+        mUnbinder.unbind();
         super.onDestroy();
     }
 

@@ -73,10 +73,11 @@ public class FakeListDialogFragment extends DialogFragment {
      private void makeFakeList(){
         if(getActivity().getContentResolver().query(TableNames.mContentUri,null,null,null,null).getCount()<=0) {
             ContentValues contentValues = new ContentValues();
+            String phoneNo = mPhoneNo.getText().toString();
             for (int i = 0; i < 10; i++) {
                 contentValues.put(TableNames.table0.mName, "Student " + i);
                 contentValues.put(TableNames.table0.mStudentId, "IDA00" + i);
-                contentValues.put(TableNames.table0.mParentPhoneNo, mPhoneNo.getText().toString());
+                contentValues.put(TableNames.table0.mParentPhoneNo,phoneNo);
                 getActivity().getContentResolver().insert(TableNames.mContentUri, contentValues);
             }
         }
@@ -86,8 +87,8 @@ public class FakeListDialogFragment extends DialogFragment {
 
 
     @Override
-    public void onStop() {
+    public void onDestroy() {
         mUnbinder.unbind();
-        super.onStop();
+        super.onDestroy();
     }
 }

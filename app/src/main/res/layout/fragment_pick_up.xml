@@ -30,10 +30,4 @@
         android:textSize="24sp"
         android:textStyle="bold" />
 
-    <com.claudiodegio.msv.MaterialSearchView
-        android:id="@+id/pickUpSearchView"
-        android:inputType="number"
-        style="@style/matchParent"
-        android:elevation="5dp" />
-
 </RelativeLayout>

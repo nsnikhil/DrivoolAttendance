@@ -1,6 +1,7 @@
 <resources>
     <string name="app_name">"Drivool Attendance "</string>
     <string name="startTrip">Start Trip</string>
+    <string name="pickup">Pick Up a student first</string>
     <string name="no">1000</string>
     <string name="presentcount">Present Count</string>
     <string name="totalcount">Total Count</string>

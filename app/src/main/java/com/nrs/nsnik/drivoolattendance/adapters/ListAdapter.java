@@ -90,7 +90,7 @@ public class ListAdapter extends RecyclerView.Adapter<ListAdapter.MyViewHolder>{
             String name = mCursor.getString(mCursor.getColumnIndex(TableNames.table0.mName));
             String studentId = mCursor.getString(mCursor.getColumnIndex(TableNames.table0.mStudentId));
             String parentNo = mCursor.getString(mCursor.getColumnIndex(TableNames.table0.mParentPhoneNo));
-            mList.add(new StudentObject(id,name,studentId,parentNo));
+            mList.add(new StudentObject(id,0,name,studentId,parentNo));
         }
     }
 

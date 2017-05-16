@@ -10,7 +10,7 @@ import com.nrs.nsnik.drivoolattendance.fragments.PickUpFragment;
 
 public class PagerAdapter extends FragmentStatePagerAdapter{
 
-    CharSequence[] mTitles = new CharSequence[]{"Pick Up","Delivery"};
+    private CharSequence[] mTitles = new CharSequence[]{"Pick Up","Delivery"};
 
     public PagerAdapter(FragmentManager fm) {
         super(fm);
@@ -25,6 +25,7 @@ public class PagerAdapter extends FragmentStatePagerAdapter{
         }
         return null;
     }
+
 
     @Override
     public int getCount() {
