@@ -4,5 +4,7 @@
     <item android:title="@string/done"
         android:icon="@drawable/ic_done_white_48dp"
         android:id="@+id/menuMainDone"/>
-
+    <item android:title="@string/changeph"
+        android:icon="@drawable/ic_done_black_24dp"
+        android:id="@+id/menuMainChange"/>
 </menu>

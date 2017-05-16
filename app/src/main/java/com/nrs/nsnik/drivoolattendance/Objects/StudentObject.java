@@ -6,12 +6,11 @@ public class StudentObject {
     private String mName,nStudentId,mPhoneNo;
     private int mId,mpickUpStatus;
 
-    public StudentObject(int id,int pickUp,String name,String sId,String phoneNo){
+    public StudentObject(int id,String name,String sId,String phoneNo){
         mId = id;
         mName = name;
         nStudentId = sId;
         mPhoneNo = phoneNo;
-        mpickUpStatus = pickUp;
     }
 
     public int getmId() {

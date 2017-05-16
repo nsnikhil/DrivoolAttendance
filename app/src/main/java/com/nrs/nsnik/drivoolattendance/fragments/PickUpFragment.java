@@ -21,6 +21,7 @@ import android.support.v7.widget.helper.ItemTouchHelper;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
@@ -29,6 +30,7 @@ import android.widget.TextView;
 
 import com.nrs.nsnik.drivoolattendance.Objects.StudentObject;
 import com.nrs.nsnik.drivoolattendance.R;
+import com.nrs.nsnik.drivoolattendance.adapters.CursorRecyclerViewAdapter;
 import com.nrs.nsnik.drivoolattendance.adapters.ListAdapter;
 import com.nrs.nsnik.drivoolattendance.data.TableHelper;
 import com.nrs.nsnik.drivoolattendance.data.TableNames;
@@ -52,6 +54,8 @@ public class PickUpFragment extends Fragment implements FakeItems{
     @BindView(R.id.counterTotal)TextView mCounterTotal;
     @BindView(R.id.counterCurrent)TextView mPresentTotal;
     private ListAdapter mListAdapter;
+    private static final String NULL_VALUE = "N/A";
+    //private CursorRecyclerViewAdapter mRecyclerViewAdapter;
     private Paint p = new Paint();
     private static int mCount = 0;
     Fragment mThisFragment;
@@ -76,8 +80,19 @@ public class PickUpFragment extends Fragment implements FakeItems{
         inflater.inflate(R.menu.main_menu,menu);
     }
 
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()){
+            case R.id.menuMainChange:
+
+                break;
+        }
+        return super.onOptionsItemSelected(item);
+    }
+
     private void initialize(){
         mMainRecyclerView.setLayoutManager(new GridLayoutManager(getActivity(),2));
+        //mRecyclerViewAdapter = new CursorRecyclerViewAdapter(getActivity(),null,getLoaderManager());
         mListAdapter = new ListAdapter(getActivity(),null);
         mMainRecyclerView.setAdapter(mListAdapter);
     }
@@ -130,6 +145,7 @@ public class PickUpFragment extends Fragment implements FakeItems{
                     ContentValues contentValues = new ContentValues();
                     contentValues.put(TableNames.table1.mStudentId,object.getnStudentId());
                     contentValues.put(TableNames.table1.mBoardingTime,calendar.getTimeInMillis());
+                    contentValues.put(TableNames.table1.mExitTime,NULL_VALUE);
 
                     getActivity().getContentResolver().insert(TableNames.mAttendanceContentUri,contentValues);
 
@@ -169,6 +185,9 @@ public class PickUpFragment extends Fragment implements FakeItems{
     }
 
     private void addRefreshedAdapter(){
+        //mRecyclerViewAdapter = new CursorRecyclerViewAdapter(getActivity(),TableNames.mContentUri,getLoaderManager());
+        //mMainRecyclerView.swapAdapter(mRecyclerViewAdapter,true);
+        //mMainRecyclerView.setAdapter(mRecyclerViewAdapter);
         mListAdapter = new ListAdapter(getActivity(),getActivity().getContentResolver().query(TableNames.mContentUri,null,null,null,null));
         mMainRecyclerView.setAdapter(mListAdapter);
         mStartTrip.setVisibility(View.GONE);

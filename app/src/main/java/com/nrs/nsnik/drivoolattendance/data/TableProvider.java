@@ -15,16 +15,20 @@ public class TableProvider extends ContentProvider{
 
     private static final int uAllEntities = 555;
     private static final int uSingleEntities = 556;
+    private static final int uSingleStudentIdEntity = 557;
     private static final int uAttendanceAllEntities = 657;
     private static final int uAttendanceSingleEntities = 658;
+    private static final int uAttendanceStudentIdEntity = 557;
     static UriMatcher sUriMatcher;
 
     static {
         sUriMatcher = new UriMatcher(UriMatcher.NO_MATCH);
         sUriMatcher.addURI(TableNames.mAuthority, TableNames.mTableName, uAllEntities);
         sUriMatcher.addURI(TableNames.mAuthority, TableNames.mTableName + "/#", uSingleEntities);
+        sUriMatcher.addURI(TableNames.mAuthority, TableNames.mTableName + "/student"+"/*", uSingleStudentIdEntity);
         sUriMatcher.addURI(TableNames.mAuthority, TableNames.mTableAttendanceName, uAttendanceAllEntities);
         sUriMatcher.addURI(TableNames.mAuthority, TableNames.mTableAttendanceName + "/#", uAttendanceSingleEntities);
+        sUriMatcher.addURI(TableNames.mAuthority, TableNames.mTableAttendanceName + "/student"+"/*", uAttendanceStudentIdEntity);
     }
 
     TableHelper helper;
@@ -48,6 +52,13 @@ public class TableProvider extends ContentProvider{
             case uSingleEntities:
                 selection = TableNames.table0.mId + "=?";
                 selectionArgs = new String[]{String.valueOf(ContentUris.parseId(uri))};
+                c = sdb.query(TableNames.mTableName, projection, selection, selectionArgs, null, null, sortOrder);
+                break;
+            case uSingleStudentIdEntity:
+                selection = TableNames.table0.mStudentId + "=?";
+                String stringUri = uri.toString();
+                selectionArgs = new String[]{stringUri.substring(stringUri.lastIndexOf('/')+1)};
+                //selectionArgs = new String[]{String.valueOf(ContentUris.parseId(uri))};
                 c = sdb.query(TableNames.mTableName, projection, selection, selectionArgs, null, null, sortOrder);
                 break;
             case uAttendanceAllEntities:
@@ -140,6 +151,11 @@ public class TableProvider extends ContentProvider{
             case uAttendanceSingleEntities:
                 selection = TableNames.table1.mId + "=?";
                 selectionArgs = new String[]{String.valueOf(ContentUris.parseId(uri))};
+                return updateVal(uri,values,selection,selectionArgs,TableNames.mTableAttendanceName);
+            case uAttendanceStudentIdEntity :
+                selection = TableNames.table1.mStudentId + "=?";
+                String stringUri = uri.toString();
+                selectionArgs = new String[]{stringUri.substring(stringUri.lastIndexOf('/')+1)};
                 return updateVal(uri,values,selection,selectionArgs,TableNames.mTableAttendanceName);
             default:
                 throw new IllegalArgumentException("Invalid Uri :" + uri);

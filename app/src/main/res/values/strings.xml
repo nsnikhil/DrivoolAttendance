@@ -11,6 +11,7 @@
     <string name="drawerOpen">Open</string>
     <string name="drawerClose">Close</string>
     <string name="done">Trip Complete</string>
+    <string name="changeph">Chanege Phone No</string>
     <string name="search">Search</string>
     <string name="phoneno">Phone No</string>
     <string name="make">Create Fake Student List</string>
