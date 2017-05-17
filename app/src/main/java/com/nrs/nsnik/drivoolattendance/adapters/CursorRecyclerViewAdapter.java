@@ -18,9 +18,11 @@ import android.view.animation.AnimationUtils;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.nrs.nsnik.drivoolattendance.Objects.AttendanceObject;
 import com.nrs.nsnik.drivoolattendance.Objects.StudentObject;
 import com.nrs.nsnik.drivoolattendance.R;
 import com.nrs.nsnik.drivoolattendance.data.TableNames;
+import com.nrs.nsnik.drivoolattendance.interfaces.NotifyInterface;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -31,40 +33,46 @@ import butterknife.ButterKnife;
 
 public class CursorRecyclerViewAdapter extends RecyclerView.Adapter<CursorRecyclerViewAdapter.MyViewHolder> implements LoaderManager.LoaderCallbacks<Cursor> {
 
-    private static final int LOADER_ID = 458;
     private Context mContext;
-    private List<StudentObject> mList;
+    private List<AttendanceObject> mAttendanceList;
     private Uri mUri;
     private int lastPosition = -1;
-    private LoaderManager mLoaderManager;
+    LoaderManager mLoaderManager;
+    NotifyInterface mNotifyInterface;
+    private static final String NULL_VALUE = "N/A";
 
-    public CursorRecyclerViewAdapter(Context context, Uri uri, LoaderManager manager) {
+    public CursorRecyclerViewAdapter(Context context, Uri uri, LoaderManager manager, NotifyInterface notifyInterface){
         mContext = context;
         mUri = uri;
-        mList = new ArrayList<>();
+        mAttendanceList = new ArrayList<>();
         mLoaderManager = manager;
-        loadList();
+        mNotifyInterface = notifyInterface;
+        mLoaderManager.initLoader(1,null,this);
     }
 
     @Override
     public MyViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-        return new MyViewHolder(LayoutInflater.from(mContext).inflate(R.layout.single_item, parent, false));
+        return new MyViewHolder( LayoutInflater.from(mContext).inflate(R.layout.single_item,parent,false));
     }
 
     @Override
-    public void onBindViewHolder(MyViewHolder holder, int position) {
-        StudentObject object = mList.get(position);
-        holder.mItemName.setText(object.getmName());
+    public void onBindViewHolder(MyViewHolder holder, final int position) {
+        AttendanceObject object = mAttendanceList.get(position);
+        String queryParam = "student/"+object.getmStudentId();
+        Cursor cursor = mContext.getContentResolver().query(Uri.withAppendedPath(TableNames.mContentUri,queryParam),null,null,null,null);
+        if(cursor.moveToFirst()){
+            holder.mItemName.setText(cursor.getString(cursor.getColumnIndex(TableNames.table0.mName)));
+        }
         setAnimation(holder.itemView, position);
     }
 
     @Override
     public int getItemCount() {
-        return mList.size();
+        return mAttendanceList.size();
     }
 
-    public StudentObject getItem(int position) {
-        return mList.get(position);
+    public AttendanceObject getItem(int position){
+        return mAttendanceList.get(position);
     }
 
     private void setAnimation(View viewToAnimate, int position) {
@@ -76,50 +84,44 @@ public class CursorRecyclerViewAdapter extends RecyclerView.Adapter<CursorRecycl
     }
 
     public void removeItem(int position) {
-        mList.remove(position);
+        mNotifyInterface.notifyChange();
+        mAttendanceList.remove(position);
         notifyItemRemoved(position);
-        notifyItemRangeChanged(position, mList.size());
+        notifyItemRangeChanged(position, mAttendanceList.size());
     }
 
-    private void makeList(Cursor cursor) {
-        mList.clear();
-        while (cursor != null && cursor.moveToNext()) {
-            int id = cursor.getInt(cursor.getColumnIndex(TableNames.table0.mId));
-            String name = cursor.getString(cursor.getColumnIndex(TableNames.table0.mName));
-            String studentId = cursor.getString(cursor.getColumnIndex(TableNames.table0.mStudentId));
-            String parentNo = cursor.getString(cursor.getColumnIndex(TableNames.table0.mParentPhoneNo));
-            mList.add(new StudentObject(id, name, studentId, parentNo));
+
+    private void makeAttendanceList(Cursor cursor){
+        mAttendanceList.clear();
+        while (cursor!=null&&cursor.moveToNext()){
+            String bTime = cursor.getString(cursor.getColumnIndex(TableNames.table1.mBoardingTime));
+            String eTime = cursor.getString(cursor.getColumnIndex(TableNames.table1.mExitTime));
+            if(bTime.equalsIgnoreCase(NULL_VALUE)&&eTime.equalsIgnoreCase(NULL_VALUE)) {
+                int id = cursor.getInt(cursor.getColumnIndex(TableNames.table1.mId));
+                String sId = cursor.getString(cursor.getColumnIndex(TableNames.table1.mStudentId));
+                mAttendanceList.add(new AttendanceObject(id, sId, bTime, eTime));
+            }
         }
-        //notifyDataSetChanged();
+        mNotifyInterface.notifyChange();
+        notifyDataSetChanged();
     }
 
     @Override
     public Loader<Cursor> onCreateLoader(int id, Bundle args) {
-        if (mUri != null) {
-            switch (id) {
-                case LOADER_ID:
-                    return new CursorLoader(mContext, mUri, null, null, null, null);
-            }
+        if(mUri!=null){
+            return new CursorLoader(mContext,mUri,null,null,null,null);
         }
         return null;
     }
 
     @Override
     public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
-        makeList(data);
+        makeAttendanceList(data);
     }
 
     @Override
     public void onLoaderReset(Loader<Cursor> loader) {
-        mList.clear();
-    }
-
-    private void loadList() {
-        if (mLoaderManager.getLoader(LOADER_ID) == null) {
-            mLoaderManager.initLoader(LOADER_ID, null, this);
-        } else {
-            mLoaderManager.restartLoader(LOADER_ID, null, this);
-        }
+        mAttendanceList.clear();
     }
 
     public class MyViewHolder extends RecyclerView.ViewHolder {
@@ -127,11 +129,10 @@ public class CursorRecyclerViewAdapter extends RecyclerView.Adapter<CursorRecycl
         @BindView(R.id.itemImage) ImageView mItemImage;
         @BindView(R.id.itemCard) CardView mItemCard;
         @BindView(R.id.itemCheckedStatus) ImageView mItemChecked;
-
         public MyViewHolder(View itemView) {
             super(itemView);
             itemView.setClickable(true);
-            ButterKnife.bind(this, itemView);
+            ButterKnife.bind(this,itemView);
         }
     }
 }

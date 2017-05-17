@@ -25,6 +25,7 @@ import android.support.v7.widget.Toolbar;
 import android.support.v7.widget.helper.ItemTouchHelper;
 import android.util.Log;
 import android.view.Menu;
+import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
@@ -101,7 +102,10 @@ public class MainActivity extends AppCompatActivity {
                         Toast.makeText(MainActivity.this,"Attendance",Toast.LENGTH_SHORT).show();
                         break;
                     case R.id.navItemOther:
-                        Toast.makeText(MainActivity.this,"Other",Toast.LENGTH_SHORT).show();
+                        Toast.makeText(MainActivity.this,"History",Toast.LENGTH_SHORT).show();
+                        break;
+                    case R.id.navItemSettings:
+                        Toast.makeText(MainActivity.this,"Settings",Toast.LENGTH_SHORT).show();
                         break;
                 }
                 return false;
@@ -110,6 +114,23 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void listener(){
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.main_menu,menu);
+        return super.onCreateOptionsMenu(menu);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()){
+            case R.id.menuMainDone:
+                break;
+            case R.id.menuMainChange:
+                break;
+        }
+        return super.onOptionsItemSelected(item);
     }
 
 }

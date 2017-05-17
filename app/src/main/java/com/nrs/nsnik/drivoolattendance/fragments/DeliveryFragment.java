@@ -35,6 +35,7 @@ import com.nrs.nsnik.drivoolattendance.R;
 import com.nrs.nsnik.drivoolattendance.adapters.CursorRvAdapter;
 import com.nrs.nsnik.drivoolattendance.adapters.ListAdapter;
 import com.nrs.nsnik.drivoolattendance.data.TableNames;
+import com.nrs.nsnik.drivoolattendance.interfaces.NotifyInterface;
 import com.nrs.nsnik.drivoolattendance.interfaces.PickUpInterface;
 import com.nrs.nsnik.drivoolattendance.services.SendSmsService;
 
@@ -47,15 +48,15 @@ import butterknife.ButterKnife;
 import butterknife.Unbinder;
 
 
-public class DeliveryFragment extends Fragment {
+public class DeliveryFragment extends Fragment implements NotifyInterface{
 
     @BindView(R.id.deliveryRecyclerView) RecyclerView mDeliveryRecyclerView;
     @BindView(R.id.deliveryPickUp) Button mDeliveryPickFirst;
     private static final String LOG_TAG = DeliveryFragment.class.getSimpleName();
-    List<String> mStudentId;
+    private List<String> mStudentId;
     //private ListAdapter mListAdapter;
     private Unbinder mUnbinder;
-    CursorRvAdapter mRecyclerAdapter;
+    private CursorRvAdapter mRecyclerAdapter;
     private Paint p = new Paint();
 
     public DeliveryFragment() {
@@ -74,7 +75,7 @@ public class DeliveryFragment extends Fragment {
     private void initialize(){
         mStudentId = new ArrayList<>();
         mDeliveryRecyclerView.setLayoutManager(new GridLayoutManager(getActivity(),2));
-        mRecyclerAdapter = new CursorRvAdapter(getActivity(),TableNames.mAttendanceContentUri,getLoaderManager());
+        mRecyclerAdapter = new CursorRvAdapter(getActivity(),TableNames.mAttendanceContentUri,getLoaderManager(),this);
         mDeliveryRecyclerView.setAdapter(mRecyclerAdapter);
     }
 
@@ -161,4 +162,16 @@ public class DeliveryFragment extends Fragment {
         super.onDestroy();
     }
 
+    private void notified(){
+        if(mDeliveryRecyclerView.getAdapter().getItemCount()<=0){
+            mDeliveryPickFirst.setVisibility(View.VISIBLE);
+        }else {
+            mDeliveryPickFirst.setVisibility(View.GONE);
+        }
+    }
+
+    @Override
+    public void notifyChange() {
+        notified();
+    }
 }

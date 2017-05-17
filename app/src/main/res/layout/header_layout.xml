@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    style="@style/matchParent"
+    android:background="@color/colorPrimary"
+    android:layout_height="180dp">
+
+
+    <TextView
+        style="@style/wrapContent"
+        android:layout_centerVertical="true"
+        android:textSize="24sp"
+        android:textColor="@color/white"
+        android:textStyle="bold"
+        android:fontFamily="sans-serif-thin"
+        android:layout_margin="@dimen/sixteen"
+        android:text="@string/app_name" />
+
+
+</RelativeLayout>

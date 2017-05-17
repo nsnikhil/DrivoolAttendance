@@ -10,7 +10,6 @@ import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
 import android.support.v7.widget.CardView;
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -20,9 +19,10 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.nrs.nsnik.drivoolattendance.Objects.AttendanceObject;
-import com.nrs.nsnik.drivoolattendance.Objects.StudentObject;
 import com.nrs.nsnik.drivoolattendance.R;
 import com.nrs.nsnik.drivoolattendance.data.TableNames;
+import com.nrs.nsnik.drivoolattendance.fragments.DeliveryFragment;
+import com.nrs.nsnik.drivoolattendance.interfaces.NotifyInterface;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -37,13 +37,15 @@ public class CursorRvAdapter extends RecyclerView.Adapter<CursorRvAdapter.MyView
     private Uri mUri;
     private int lastPosition = -1;
     LoaderManager mLoaderManager;
+    NotifyInterface mNotifyInterface;
     private static final String NULL_VALUE = "N/A";
 
-    public CursorRvAdapter(Context context,Uri uri,LoaderManager manager){
+    public CursorRvAdapter(Context context, Uri uri, LoaderManager manager, NotifyInterface notifyInterface){
         mContext = context;
         mUri = uri;
         mAttendanceList = new ArrayList<>();
         mLoaderManager = manager;
+        mNotifyInterface = (NotifyInterface) notifyInterface;
         mLoaderManager.initLoader(1,null,this);
     }
 
@@ -81,6 +83,7 @@ public class CursorRvAdapter extends RecyclerView.Adapter<CursorRvAdapter.MyView
     }
 
     public void removeItem(int position) {
+        mNotifyInterface.notifyChange();
         mAttendanceList.remove(position);
         notifyItemRemoved(position);
         notifyItemRangeChanged(position, mAttendanceList.size());
@@ -90,14 +93,15 @@ public class CursorRvAdapter extends RecyclerView.Adapter<CursorRvAdapter.MyView
     private void makeAttendanceList(Cursor cursor){
         mAttendanceList.clear();
         while (cursor!=null&&cursor.moveToNext()){
+            String bTime = cursor.getString(cursor.getColumnIndex(TableNames.table1.mBoardingTime));
             String eTime = cursor.getString(cursor.getColumnIndex(TableNames.table1.mExitTime));
-            if(eTime.equalsIgnoreCase(NULL_VALUE)) {
+            if(!bTime.equalsIgnoreCase(NULL_VALUE)&&eTime.equalsIgnoreCase(NULL_VALUE)) {
                 int id = cursor.getInt(cursor.getColumnIndex(TableNames.table1.mId));
                 String sId = cursor.getString(cursor.getColumnIndex(TableNames.table1.mStudentId));
-                String bTime = cursor.getString(cursor.getColumnIndex(TableNames.table1.mBoardingTime));
                 mAttendanceList.add(new AttendanceObject(id, sId, bTime, eTime));
             }
         }
+        mNotifyInterface.notifyChange();
         notifyDataSetChanged();
     }
 

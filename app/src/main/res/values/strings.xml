@@ -16,6 +16,16 @@
     <string name="phoneno">Phone No</string>
     <string name="make">Create Fake Student List</string>
     <string name="servicedescription">Sends sms to parents</string>
+    <string name="trip">Trip Started</string>
+    <string name="notificationId">1526</string>
+
+
+    <!-- navItems-->
+    <string name="navList">Attendance</string>
+    <string name="navHistory">History</string>
+    <string name="navSetting">Settings</string>
+    <string name="navTestMode">Test Mode</string>
+    <!-- -->
 
     <!-- urls-->
     <string name="uriBaseUrl">http://59.162.167.52/api/MessageCompose?admin=dsouzaronald@gmail.com&amp;user=principal@campionmumbai.org:M2L9V7B&amp;senderID=CAMPMU</string>

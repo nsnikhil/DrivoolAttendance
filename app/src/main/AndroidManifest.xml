@@ -26,6 +26,9 @@
         <service android:name=".services.SendSmsService"
             android:description="@string/servicedescription"
             android:exported="false"/>
+        <service
+            android:exported="false"
+            android:name=".services.AttendanceService"/>
     </application>
 
 </manifest>
