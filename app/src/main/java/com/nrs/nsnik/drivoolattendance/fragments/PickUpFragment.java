@@ -1,14 +1,9 @@
 package com.nrs.nsnik.drivoolattendance.fragments;
 
 
-import android.app.Activity;
-import android.app.Notification;
-import android.app.PendingIntent;
-import android.content.ContentProvider;
 import android.content.ContentValues;
 import android.content.Intent;
 import android.database.Cursor;
-import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
@@ -22,9 +17,6 @@ import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.helper.ItemTouchHelper;
 import android.view.LayoutInflater;
-import android.view.Menu;
-import android.view.MenuInflater;
-import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
@@ -33,17 +25,12 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.nrs.nsnik.drivoolattendance.Objects.AttendanceObject;
-import com.nrs.nsnik.drivoolattendance.Objects.StudentObject;
 import com.nrs.nsnik.drivoolattendance.R;
-import com.nrs.nsnik.drivoolattendance.adapters.CursorRecyclerViewAdapter;
-import com.nrs.nsnik.drivoolattendance.adapters.ListAdapter;
-import com.nrs.nsnik.drivoolattendance.data.TableHelper;
+import com.nrs.nsnik.drivoolattendance.adapters.ObserverAdapter;
 import com.nrs.nsnik.drivoolattendance.data.TableNames;
 import com.nrs.nsnik.drivoolattendance.fragments.dialogFragments.FakeListDialogFragment;
 import com.nrs.nsnik.drivoolattendance.interfaces.FakeItems;
 import com.nrs.nsnik.drivoolattendance.interfaces.NotifyInterface;
-import com.nrs.nsnik.drivoolattendance.interfaces.PickUpInterface;
-import com.nrs.nsnik.drivoolattendance.services.AttendanceService;
 import com.nrs.nsnik.drivoolattendance.services.SendSmsService;
 
 import java.util.Calendar;
@@ -60,9 +47,8 @@ public class PickUpFragment extends Fragment implements FakeItems,NotifyInterfac
     @BindView(R.id.pickUpRecyclerView) RecyclerView mMainRecyclerView;
     @BindView(R.id.counterTotal)TextView mCounterTotal;
     @BindView(R.id.counterCurrent)TextView mPresentTotal;
-    //private ListAdapter mListAdapter;
     private static final String NULL_VALUE = "N/A";
-    private CursorRecyclerViewAdapter mRecyclerViewAdapter;
+    private ObserverAdapter mObserverAdapter;
     private Paint p = new Paint();
     private static int mCount = 0;
     Fragment mThisFragment;
@@ -83,9 +69,8 @@ public class PickUpFragment extends Fragment implements FakeItems,NotifyInterfac
 
     private void initialize(){
         mMainRecyclerView.setLayoutManager(new GridLayoutManager(getActivity(),2));
-        mRecyclerViewAdapter = new CursorRecyclerViewAdapter(getActivity(),TableNames.mAttendanceContentUri,getLoaderManager(),this);
-        //mListAdapter = new ListAdapter(getActivity(),null);
-        mMainRecyclerView.setAdapter(mRecyclerViewAdapter);
+        mObserverAdapter  = new ObserverAdapter(getActivity(),getLoaderManager(),0,this);
+        mMainRecyclerView.setAdapter(mObserverAdapter);
     }
 
 
@@ -112,14 +97,11 @@ public class PickUpFragment extends Fragment implements FakeItems,NotifyInterfac
             @Override
             public void onSwiped(RecyclerView.ViewHolder viewHolder, int direction) {
                 if (direction == ItemTouchHelper.LEFT){
-                    mRecyclerViewAdapter.removeItem(viewHolder.getAdapterPosition());
+                    mObserverAdapter.removeItem(viewHolder.getAdapterPosition());
                 } else {
-
-                    //StartService
-                    AttendanceObject object = mRecyclerViewAdapter.getItem(viewHolder.getAdapterPosition());
+                    AttendanceObject object = mObserverAdapter.getItem(viewHolder.getAdapterPosition());
                     String queryParam = "student/"+object.getmStudentId();
                     Cursor cursor = getActivity().getContentResolver().query(Uri.withAppendedPath(TableNames.mContentUri,queryParam),null,null,null,null);
-
                     if(cursor!=null&&cursor.moveToFirst()){
                         String name = cursor.getString(cursor.getColumnIndex(TableNames.table0.mName));
                         String phoneNo = cursor.getString(cursor.getColumnIndex(TableNames.table0.mParentPhoneNo));
@@ -130,26 +112,14 @@ public class PickUpFragment extends Fragment implements FakeItems,NotifyInterfac
                     }else {
                         Toast.makeText(getActivity(),"Error",Toast.LENGTH_LONG).show();
                     }
-
-
-                    //RemoveItem
-                    mRecyclerViewAdapter.removeItem(viewHolder.getAdapterPosition());
-
-                    //UpdateCounter
+                    mObserverAdapter.removeItem(viewHolder.getAdapterPosition());
                     mPresentTotal.setText(String.valueOf(++mCount));
-
-
-                    //markStudent
                     Calendar calendar = Calendar.getInstance();
-
                     ContentValues contentValues = new ContentValues();
                     contentValues.put(TableNames.table1.mBoardingTime,calendar.getTimeInMillis());
-
                     getActivity().getContentResolver().update(Uri.withAppendedPath(TableNames.mAttendanceContentUri,queryParam),contentValues,null,null);
-
                 }
             }
-
             @Override
             public void onChildDraw(Canvas c, RecyclerView recyclerView, RecyclerView.ViewHolder viewHolder, float dX, float dY, int actionState, boolean isCurrentlyActive) {
                 Bitmap icon;
@@ -189,19 +159,13 @@ public class PickUpFragment extends Fragment implements FakeItems,NotifyInterfac
             contentValues.put(TableNames.table1.mExitTime,NULL_VALUE);
             getActivity().getContentResolver().insert(TableNames.mAttendanceContentUri,contentValues);
         }
-        mRecyclerViewAdapter = new CursorRecyclerViewAdapter(getActivity(),TableNames.mAttendanceContentUri,getLoaderManager(),this);
-        //mMainRecyclerView.swapAdapter(mRecyclerViewAdapter,true);
-        mMainRecyclerView.setAdapter(mRecyclerViewAdapter);
-        //mListAdapter = new ListAdapter(getActivity(),getActivity().getContentResolver().query(TableNames.mContentUri,null,null,null,null));
-        //mMainRecyclerView.setAdapter(mListAdapter);
+        mObserverAdapter  = new ObserverAdapter(getActivity(),getLoaderManager(),0,this);
+        mMainRecyclerView.setAdapter(mObserverAdapter);
         mStartTrip.setVisibility(View.GONE);
-
         //Intent attenService = new Intent(getActivity(),AttendanceService.class);
         //getActivity().startService(attenService);
     }
-
-
-
+    
     @Override
     public void onDestroy() {
         mUnbinder.unbind();

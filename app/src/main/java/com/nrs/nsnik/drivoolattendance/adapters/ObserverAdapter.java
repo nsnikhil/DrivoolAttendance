@@ -1,16 +1,15 @@
 package com.nrs.nsnik.drivoolattendance.adapters;
 
-
 import android.content.Context;
 import android.database.Cursor;
 import android.net.Uri;
-import android.os.Bundle;
 import android.support.v4.app.LoaderManager;
-import android.support.v4.content.CursorLoader;
-import android.support.v4.content.Loader;
 import android.support.v7.widget.CardView;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
+import android.view.GestureDetector;
 import android.view.LayoutInflater;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.Animation;
@@ -20,9 +19,10 @@ import android.widget.TextView;
 
 import com.nrs.nsnik.drivoolattendance.Objects.AttendanceObject;
 import com.nrs.nsnik.drivoolattendance.R;
+import com.nrs.nsnik.drivoolattendance.data.DatabaseObserver;
 import com.nrs.nsnik.drivoolattendance.data.TableNames;
-import com.nrs.nsnik.drivoolattendance.fragments.DeliveryFragment;
 import com.nrs.nsnik.drivoolattendance.interfaces.NotifyInterface;
+import com.nrs.nsnik.drivoolattendance.interfaces.ObserverInterface;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -30,23 +30,26 @@ import java.util.List;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 
-public class CursorRvAdapter extends RecyclerView.Adapter<CursorRvAdapter.MyViewHolder> implements LoaderManager.LoaderCallbacks<Cursor>{
 
-    private Context mContext;
+public class ObserverAdapter  extends RecyclerView.Adapter<ObserverAdapter.MyViewHolder> implements ObserverInterface{
+
     private List<AttendanceObject> mAttendanceList;
-    private Uri mUri;
-    private int lastPosition = -1;
-    LoaderManager mLoaderManager;
-    NotifyInterface mNotifyInterface;
     private static final String NULL_VALUE = "N/A";
+    private Context mContext;
+    private int mFlag;
+    private static DatabaseObserver mObserver;
+    private GestureDetector mGestureDetector;
+    private NotifyInterface mNotifyInterface;
+    private int lastPosition = -1;
 
-    public CursorRvAdapter(Context context, Uri uri, LoaderManager manager, NotifyInterface notifyInterface){
+    public ObserverAdapter(Context context, LoaderManager manager, int flag,NotifyInterface notifyInterface){
         mContext = context;
-        mUri = uri;
+        mFlag = flag;
         mAttendanceList = new ArrayList<>();
-        mLoaderManager = manager;
-        mNotifyInterface = (NotifyInterface) notifyInterface;
-        mLoaderManager.initLoader(1,null,this);
+        mNotifyInterface = notifyInterface;
+        mObserver  = new DatabaseObserver(mContext,manager);
+        mGestureDetector = new GestureDetector(context, new GestureListener());
+        mObserver.add(this);
     }
 
     @Override
@@ -55,12 +58,20 @@ public class CursorRvAdapter extends RecyclerView.Adapter<CursorRvAdapter.MyView
     }
 
     @Override
-    public void onBindViewHolder(MyViewHolder holder, final int position) {
+    public void onBindViewHolder(MyViewHolder holder, int position) {
         AttendanceObject object = mAttendanceList.get(position);
         String queryParam = "student/"+object.getmStudentId();
         Cursor cursor = mContext.getContentResolver().query(Uri.withAppendedPath(TableNames.mContentUri,queryParam),null,null,null,null);
-        if(cursor.moveToFirst()){
-            holder.mItemName.setText(cursor.getString(cursor.getColumnIndex(TableNames.table0.mName)));
+        try{
+            if(cursor!=null&&cursor.moveToFirst()){
+                holder.mItemName.setText(cursor.getString(cursor.getColumnIndex(TableNames.table0.mName)));
+            }
+        }catch (NullPointerException e){
+            e.printStackTrace();
+        }finally {
+            if(cursor!=null){
+                cursor.close();
+            }
         }
         setAnimation(holder.itemView, position);
     }
@@ -68,6 +79,12 @@ public class CursorRvAdapter extends RecyclerView.Adapter<CursorRvAdapter.MyView
     @Override
     public int getItemCount() {
         return mAttendanceList.size();
+    }
+
+    @Override
+    public void update(Cursor cursor) {
+        Log.d("acsize",cursor.getCount()+"");
+        makeAttendanceList(cursor);
     }
 
     public AttendanceObject getItem(int position){
@@ -89,38 +106,50 @@ public class CursorRvAdapter extends RecyclerView.Adapter<CursorRvAdapter.MyView
         notifyItemRangeChanged(position, mAttendanceList.size());
     }
 
+    private class GestureListener extends GestureDetector.SimpleOnGestureListener {
+
+        @Override
+        public boolean onDown(MotionEvent e) {
+            return true;
+        }
+
+        @Override
+        public boolean onDoubleTap(MotionEvent e) {
+            float x = e.getX();
+            float y = e.getY();
+            Log.d("Double Tap", "Tapped at: (" + x + "," + y + ")");
+            return true;
+        }
+    }
 
     private void makeAttendanceList(Cursor cursor){
         mAttendanceList.clear();
         while (cursor!=null&&cursor.moveToNext()){
             String bTime = cursor.getString(cursor.getColumnIndex(TableNames.table1.mBoardingTime));
             String eTime = cursor.getString(cursor.getColumnIndex(TableNames.table1.mExitTime));
-            if(!bTime.equalsIgnoreCase(NULL_VALUE)&&eTime.equalsIgnoreCase(NULL_VALUE)) {
-                int id = cursor.getInt(cursor.getColumnIndex(TableNames.table1.mId));
-                String sId = cursor.getString(cursor.getColumnIndex(TableNames.table1.mStudentId));
-                mAttendanceList.add(new AttendanceObject(id, sId, bTime, eTime));
+            switch (mFlag){
+                case 0:
+                    if(bTime.equalsIgnoreCase(NULL_VALUE)&&eTime.equalsIgnoreCase(NULL_VALUE)) {
+                        int id = cursor.getInt(cursor.getColumnIndex(TableNames.table1.mId));
+                        String sId = cursor.getString(cursor.getColumnIndex(TableNames.table1.mStudentId));
+                        mAttendanceList.add(new AttendanceObject(id, sId, bTime, eTime));
+                    }
+                    break;
+                case 1:
+                    if(!bTime.equalsIgnoreCase(NULL_VALUE)&&eTime.equalsIgnoreCase(NULL_VALUE)) {
+                        int id = cursor.getInt(cursor.getColumnIndex(TableNames.table1.mId));
+                        String sId = cursor.getString(cursor.getColumnIndex(TableNames.table1.mStudentId));
+                        mAttendanceList.add(new AttendanceObject(id, sId, bTime, eTime));
+                    }
+                    break;
+                default:
+                    int id = cursor.getInt(cursor.getColumnIndex(TableNames.table1.mId));
+                    String sId = cursor.getString(cursor.getColumnIndex(TableNames.table1.mStudentId));
+                    mAttendanceList.add(new AttendanceObject(id, sId, bTime, eTime));
             }
         }
         mNotifyInterface.notifyChange();
         notifyDataSetChanged();
-    }
-
-    @Override
-    public Loader<Cursor> onCreateLoader(int id, Bundle args) {
-        if(mUri!=null){
-            return new CursorLoader(mContext,mUri,null,null,null,null);
-        }
-        return null;
-    }
-
-    @Override
-    public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
-        makeAttendanceList(data);
-    }
-
-    @Override
-    public void onLoaderReset(Loader<Cursor> loader) {
-        mAttendanceList.clear();
     }
 
     public class MyViewHolder extends RecyclerView.ViewHolder {
