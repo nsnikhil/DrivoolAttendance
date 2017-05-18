@@ -31,6 +31,7 @@ import com.nrs.nsnik.drivoolattendance.data.TableNames;
 import com.nrs.nsnik.drivoolattendance.fragments.dialogFragments.FakeListDialogFragment;
 import com.nrs.nsnik.drivoolattendance.interfaces.FakeItems;
 import com.nrs.nsnik.drivoolattendance.interfaces.NotifyInterface;
+import com.nrs.nsnik.drivoolattendance.services.AttendanceService;
 import com.nrs.nsnik.drivoolattendance.services.SendSmsService;
 
 import java.util.Calendar;
@@ -162,10 +163,10 @@ public class PickUpFragment extends Fragment implements FakeItems,NotifyInterfac
         mObserverAdapter  = new ObserverAdapter(getActivity(),getLoaderManager(),0,this);
         mMainRecyclerView.setAdapter(mObserverAdapter);
         mStartTrip.setVisibility(View.GONE);
-        //Intent attenService = new Intent(getActivity(),AttendanceService.class);
-        //getActivity().startService(attenService);
+        Intent attenService = new Intent(getActivity(),AttendanceService.class);
+        getActivity().startService(attenService);
     }
-    
+
     @Override
     public void onDestroy() {
         mUnbinder.unbind();
