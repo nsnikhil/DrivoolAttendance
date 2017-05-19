@@ -25,6 +25,10 @@ public class TripSummaryActivity extends AppCompatActivity {
     @Override
     public boolean onSupportNavigateUp() {
         finish();
+        Intent startMain = new Intent(TripSummaryActivity.this,MainActivity.class);
+        startMain.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+        startMain.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        startActivity(startMain);
         return super.onSupportNavigateUp();
     }
 
@@ -35,7 +39,10 @@ public class TripSummaryActivity extends AppCompatActivity {
 
     @Override
     public void onBackPressed() {
-        startActivity(new Intent(TripSummaryActivity.this,MainActivity.class));
+        Intent startMain = new Intent(TripSummaryActivity.this,MainActivity.class);
+        startMain.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+        startMain.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        startActivity(startMain);
     }
 
     private void listeners() {

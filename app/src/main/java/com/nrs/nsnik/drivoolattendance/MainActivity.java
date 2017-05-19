@@ -55,7 +55,6 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void initialize(){
-
         setSupportActionBar(mMainToolbar);
         mPagerAdapter = new PagerAdapter(getSupportFragmentManager());
         mMainViewPager.setAdapter(mPagerAdapter);
