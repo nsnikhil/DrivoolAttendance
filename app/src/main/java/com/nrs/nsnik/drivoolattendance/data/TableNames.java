@@ -10,7 +10,7 @@ public class TableNames {
     public static final String mTableName = "studentTable";
     public static final String mTableAttendanceName = "attendanceTable";
     public static final String mTableSessionName = "sessionTable";
-    public static final int mDatabaseVersion = 5;
+    public static final int mDatabaseVersion = 6;
 
     public static final String mScheme = "content://";
     public static final String mAuthority = "com.nrs.nsnik.drivoolattendance";
@@ -25,6 +25,7 @@ public class TableNames {
         public static final String mName = "name";
         public static final String mStudentId = "studentid";
         public static final String mParentPhoneNo = "parentphoneno";
+        public static final String mPhotoUrl = "photourl";
     }
 
     public class table1 implements BaseColumns {

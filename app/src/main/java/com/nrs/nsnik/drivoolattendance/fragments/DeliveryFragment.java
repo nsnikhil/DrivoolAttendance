@@ -10,6 +10,7 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.RectF;
+import android.location.Location;
 import android.net.Uri;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
@@ -30,6 +31,8 @@ import com.nrs.nsnik.drivoolattendance.R;
 import com.nrs.nsnik.drivoolattendance.TripSummaryActivity;
 import com.nrs.nsnik.drivoolattendance.adapters.ObserverAdapter;
 import com.nrs.nsnik.drivoolattendance.data.TableNames;
+import com.nrs.nsnik.drivoolattendance.fragments.dialogFragments.GetLocation;
+import com.nrs.nsnik.drivoolattendance.interfaces.GetLocationInterface;
 import com.nrs.nsnik.drivoolattendance.interfaces.NotifyInterface;
 import com.nrs.nsnik.drivoolattendance.services.SendSmsService;
 
@@ -40,16 +43,24 @@ import butterknife.ButterKnife;
 import butterknife.Unbinder;
 
 
-public class DeliveryFragment extends Fragment implements NotifyInterface{
+public class DeliveryFragment extends Fragment implements NotifyInterface,GetLocationInterface{
 
     @BindView(R.id.deliveryRecyclerView) RecyclerView mDeliveryRecyclerView;
     @BindView(R.id.deliveryPickUp) Button mDeliveryPickFirst;
     private static final String NULL_VALUE = "N/A";
     private static final String LOG_TAG = DeliveryFragment.class.getSimpleName();
     private Unbinder mUnbinder;
+    GetLocation mGetLocation;
     private ObserverAdapter mObserverAdapter;
+    private double mLat, mLng;
+    Fragment mThisFragment;
+    String mLocationLink;
     private Paint p = new Paint();
+    RecyclerView.ViewHolder mTempViewHolder;
+
+
     public DeliveryFragment() {
+
     }
 
 
@@ -59,6 +70,7 @@ public class DeliveryFragment extends Fragment implements NotifyInterface{
         mUnbinder = ButterKnife.bind(this,v);
         initialize();
         listeners();
+        mThisFragment = this;
         return v;
     }
 
@@ -66,6 +78,15 @@ public class DeliveryFragment extends Fragment implements NotifyInterface{
         mDeliveryRecyclerView.setLayoutManager(new GridLayoutManager(getActivity(),2));
         mObserverAdapter = new ObserverAdapter(getActivity(),getLoaderManager(),1,this);
         mDeliveryRecyclerView.setAdapter(mObserverAdapter);
+    }
+
+    @Override
+    public void getLocation(Location location) {
+        mLat = location.getLatitude();
+        mLng = location.getLongitude();
+        mGetLocation.dismiss();
+        mLocationLink = getResources().getString(R.string.urlLocationUrl)+mLat+","+mLng;
+        swipeAction(mTempViewHolder,mLocationLink);
     }
 
     private void listeners(){
@@ -83,27 +104,15 @@ public class DeliveryFragment extends Fragment implements NotifyInterface{
             }
             @Override
             public void onSwiped(RecyclerView.ViewHolder viewHolder, int direction) {
+                mTempViewHolder  = viewHolder;
                 if (direction == ItemTouchHelper.LEFT){
-                    mObserverAdapter.removeItem(viewHolder.getAdapterPosition());
+                    mGetLocation = new GetLocation();
+                    mGetLocation.setTargetFragment(mThisFragment,15);
+                    mGetLocation.show(getFragmentManager(),"location");
                 } else {
-                    AttendanceObject object = mObserverAdapter.getItem(viewHolder.getAdapterPosition());
-                    String queryParam = "student/"+object.getmStudentId();
-                    Cursor cursor = getActivity().getContentResolver().query(Uri.withAppendedPath(TableNames.mContentUri,queryParam),null,null,null,null);
-                    if(cursor!=null&&cursor.moveToFirst()){
-                        String name = cursor.getString(cursor.getColumnIndex(TableNames.table0.mName));
-                        String phoneNo = cursor.getString(cursor.getColumnIndex(TableNames.table0.mParentPhoneNo));
-                        Intent message = new Intent(getActivity(),SendSmsService.class);
-                        message.putExtra(getResources().getString(R.string.intentKeyMessage),name+" Delivered");
-                        message.putExtra(getResources().getString(R.string.intentkeyPhoneNo),phoneNo);
-                        getActivity().startService(message);
-                    }else {
-                        Toast.makeText(getActivity(),"Error",Toast.LENGTH_LONG).show();
-                    }
-                    Calendar calendar = Calendar.getInstance();
-                    ContentValues contentValues = new ContentValues();
-                    contentValues.put(TableNames.table1.mExitTime,calendar.getTimeInMillis());
-                    getActivity().getContentResolver().update(Uri.withAppendedPath(TableNames.mAttendanceContentUri,queryParam),contentValues,null,null);
-                    mObserverAdapter.removeItem(viewHolder.getAdapterPosition());
+                    mGetLocation = new GetLocation();
+                    mGetLocation.setTargetFragment(mThisFragment,15);
+                    mGetLocation.show(getFragmentManager(),"location");
                 }
             }
 
@@ -123,10 +132,10 @@ public class DeliveryFragment extends Fragment implements NotifyInterface{
                         c.drawBitmap(icon,null,icon_dest,p);
 
                     } else {
-                        p.setColor(Color.parseColor("#D32F2F"));
+                        p.setColor(Color.parseColor("#388E3C"));
                         RectF background = new RectF((float) itemView.getRight()  , (float) itemView.getTop(),itemView.getLeft(), (float) itemView.getBottom());
                         c.drawRect(background,p);
-                        icon = BitmapFactory.decodeResource(getResources(), R.drawable.ic_close_white_48dp);
+                        icon = BitmapFactory.decodeResource(getResources(), R.drawable.ic_done_white_48dp);
                         RectF icon_dest = new RectF((float) itemView.getRight() - width  ,(float) itemView.getTop() + width,(float) itemView.getRight() ,(float)itemView.getBottom() - width);
                         c.drawBitmap(icon,null,icon_dest,p);
                     }
@@ -135,6 +144,27 @@ public class DeliveryFragment extends Fragment implements NotifyInterface{
             }
 
         }).attachToRecyclerView(mDeliveryRecyclerView);
+    }
+
+    private void swipeAction(RecyclerView.ViewHolder viewHolder,String messageText){
+        AttendanceObject object = mObserverAdapter.getItem(viewHolder.getAdapterPosition());
+        String queryParam = "student/"+object.getmStudentId();
+        Cursor cursor = getActivity().getContentResolver().query(Uri.withAppendedPath(TableNames.mContentUri,queryParam),null,null,null,null);
+        if(cursor!=null&&cursor.moveToFirst()){
+            String name = cursor.getString(cursor.getColumnIndex(TableNames.table0.mName));
+            String phoneNo = cursor.getString(cursor.getColumnIndex(TableNames.table0.mParentPhoneNo));
+            Intent message = new Intent(getActivity(),SendSmsService.class);
+            message.putExtra(getResources().getString(R.string.intentKeyMessage),name+" Delivered at " + messageText);
+            message.putExtra(getResources().getString(R.string.intentkeyPhoneNo),phoneNo);
+            getActivity().startService(message);
+        }else {
+            Toast.makeText(getActivity(),"Error",Toast.LENGTH_LONG).show();
+        }
+        Calendar calendar = Calendar.getInstance();
+        ContentValues contentValues = new ContentValues();
+        contentValues.put(TableNames.table1.mExitTime,calendar.getTimeInMillis());
+        getActivity().getContentResolver().update(Uri.withAppendedPath(TableNames.mAttendanceContentUri,queryParam),contentValues,null,null);
+        mObserverAdapter.removeItem(viewHolder.getAdapterPosition());
     }
 
     @Override
@@ -208,4 +238,5 @@ public class DeliveryFragment extends Fragment implements NotifyInterface{
     public void notifyChange() {
         notified();
     }
+
 }

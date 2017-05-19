@@ -1,8 +1,10 @@
 package com.nrs.nsnik.drivoolattendance.fragments;
 
 
+import android.Manifest;
 import android.content.ContentValues;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -10,13 +12,16 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.RectF;
+import android.location.Location;
 import android.net.Uri;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
+import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.helper.ItemTouchHelper;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -25,14 +30,15 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.nrs.nsnik.drivoolattendance.fragments.dialogFragments.FakeListDialogFragment;
+import com.nrs.nsnik.drivoolattendance.fragments.dialogFragments.GetLocation;
 import com.nrs.nsnik.drivoolattendance.Objects.AttendanceObject;
 import com.nrs.nsnik.drivoolattendance.R;
 import com.nrs.nsnik.drivoolattendance.adapters.ObserverAdapter;
 import com.nrs.nsnik.drivoolattendance.data.TableNames;
-import com.nrs.nsnik.drivoolattendance.fragments.dialogFragments.FakeListDialogFragment;
 import com.nrs.nsnik.drivoolattendance.interfaces.FakeItems;
+import com.nrs.nsnik.drivoolattendance.interfaces.GetLocationInterface;
 import com.nrs.nsnik.drivoolattendance.interfaces.NotifyInterface;
-import com.nrs.nsnik.drivoolattendance.services.AttendanceService;
 import com.nrs.nsnik.drivoolattendance.services.SendSmsService;
 
 import java.util.Calendar;
@@ -42,25 +48,26 @@ import butterknife.ButterKnife;
 import butterknife.Unbinder;
 
 
-public class PickUpFragment extends Fragment implements FakeItems, NotifyInterface {
+public class PickUpFragment extends Fragment implements FakeItems, NotifyInterface, GetLocationInterface {
 
     private static final String NULL_VALUE = "N/A";
     private static int mCount = 0;
-    @BindView(R.id.pickUpStartTrip)
-    Button mStartTrip;
-    @BindView(R.id.pickUpCounterContainer)
-    LinearLayout mCounterContainer;
-    @BindView(R.id.pickUpRecyclerView)
-    RecyclerView mMainRecyclerView;
-    @BindView(R.id.counterTotal)
-    TextView mCounterTotal;
-    @BindView(R.id.counterCurrent)
-    TextView mPresentTotal;
+    @BindView(R.id.pickUpStartTrip) Button mStartTrip;
+    @BindView(R.id.pickUpCounterContainer) LinearLayout mCounterContainer;
+    @BindView(R.id.pickUpRecyclerView) RecyclerView mMainRecyclerView;
+    @BindView(R.id.counterTotal) TextView mCounterTotal;
+    @BindView(R.id.counterCurrent) TextView mPresentTotal;
     Fragment mThisFragment;
+    private double mLat, mLng;
+    GetLocation mGetLocation;
     Intent mAttenService;
     private ObserverAdapter mObserverAdapter;
+    private static final String LOG_TAG = PickUpFragment.class.getSimpleName();
+    private static final int LOCATION_PERMISSION = 56;
     private Paint p = new Paint();
     private Unbinder mUnbinder;
+    String mLocationLink;
+    RecyclerView.ViewHolder mTempViewHolder;
 
     public PickUpFragment() {
     }
@@ -81,20 +88,36 @@ public class PickUpFragment extends Fragment implements FakeItems, NotifyInterfa
         mMainRecyclerView.setAdapter(mObserverAdapter);
     }
 
+    private void checkPermission(){
+        if (ActivityCompat.checkSelfPermission(getActivity(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
+                ||ActivityCompat.checkSelfPermission(getActivity(), Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_DENIED) {
+            requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, LOCATION_PERMISSION);
+        }else {
+            if (getActivity().getContentResolver().query(TableNames.mContentUri, null, null, null, null).getCount() <= 0) {
+                FakeListDialogFragment fakeListDialogFragment = new FakeListDialogFragment();
+                fakeListDialogFragment.setCancelable(false);
+                fakeListDialogFragment.setTargetFragment(mThisFragment, 121);
+                fakeListDialogFragment.show(getFragmentManager(), "fakelist");
+            } else {
+                startSession();
+            }
+        }
+    }
+
+    @Override
+    public void getLocation(Location location) {
+        mLat = location.getLatitude();
+        mLng = location.getLongitude();
+        mGetLocation.dismiss();
+        mLocationLink = getResources().getString(R.string.urlLocationUrl)+mLat+","+mLng;
+        swipeAction(mTempViewHolder,mLocationLink);
+    }
 
     private void listener() {
         mStartTrip.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (getActivity().getContentResolver().query(TableNames.mContentUri, null, null, null, null).getCount() <= 0) {
-                    FakeListDialogFragment fakeListDialogFragment = new FakeListDialogFragment();
-                    fakeListDialogFragment.setCancelable(false);
-                    fakeListDialogFragment.setTargetFragment(mThisFragment, 121);
-                    fakeListDialogFragment.show(getFragmentManager(), "fakelist");
-                } else {
-                    //addRefreshedAdapter();
-                    startSession();
-                }
+               checkPermission();
             }
         });
         new ItemTouchHelper(new ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT | ItemTouchHelper.RIGHT) {
@@ -108,25 +131,10 @@ public class PickUpFragment extends Fragment implements FakeItems, NotifyInterfa
                 if (direction == ItemTouchHelper.LEFT) {
                     mObserverAdapter.removeItem(viewHolder.getAdapterPosition());
                 } else {
-                    AttendanceObject object = mObserverAdapter.getItem(viewHolder.getAdapterPosition());
-                    String queryParam = "student/" + object.getmStudentId();
-                    Cursor cursor = getActivity().getContentResolver().query(Uri.withAppendedPath(TableNames.mContentUri, queryParam), null, null, null, null);
-                    if (cursor != null && cursor.moveToFirst()) {
-                        String name = cursor.getString(cursor.getColumnIndex(TableNames.table0.mName));
-                        String phoneNo = cursor.getString(cursor.getColumnIndex(TableNames.table0.mParentPhoneNo));
-                        Intent message = new Intent(getActivity(), SendSmsService.class);
-                        message.putExtra(getResources().getString(R.string.intentKeyMessage), name + " Picked Up");
-                        message.putExtra(getResources().getString(R.string.intentkeyPhoneNo), phoneNo);
-                        getActivity().startService(message);
-                    } else {
-                        Toast.makeText(getActivity(), "Error", Toast.LENGTH_LONG).show();
-                    }
-                    mObserverAdapter.removeItem(viewHolder.getAdapterPosition());
-                    mPresentTotal.setText(String.valueOf(++mCount));
-                    Calendar calendar = Calendar.getInstance();
-                    ContentValues contentValues = new ContentValues();
-                    contentValues.put(TableNames.table1.mBoardingTime, calendar.getTimeInMillis());
-                    getActivity().getContentResolver().update(Uri.withAppendedPath(TableNames.mAttendanceContentUri, queryParam), contentValues, null, null);
+                    mTempViewHolder  = viewHolder;
+                    mGetLocation = new GetLocation();
+                    mGetLocation.setTargetFragment(mThisFragment,14);
+                    mGetLocation.show(getFragmentManager(),"location");
                 }
             }
 
@@ -158,6 +166,28 @@ public class PickUpFragment extends Fragment implements FakeItems, NotifyInterfa
             }
 
         }).attachToRecyclerView(mMainRecyclerView);
+    }
+
+    private void swipeAction(RecyclerView.ViewHolder viewHolder,String messageText){
+        AttendanceObject object = mObserverAdapter.getItem(viewHolder.getAdapterPosition());
+        String queryParam = "student/" + object.getmStudentId();
+        Cursor cursor = getActivity().getContentResolver().query(Uri.withAppendedPath(TableNames.mContentUri, queryParam), null, null, null, null);
+        if (cursor != null && cursor.moveToFirst()) {
+            String name = cursor.getString(cursor.getColumnIndex(TableNames.table0.mName));
+            String phoneNo = cursor.getString(cursor.getColumnIndex(TableNames.table0.mParentPhoneNo));
+            Intent message = new Intent(getActivity(), SendSmsService.class);
+            message.putExtra(getResources().getString(R.string.intentKeyMessage), name + " Picked Up at "+ messageText);
+            message.putExtra(getResources().getString(R.string.intentkeyPhoneNo), phoneNo);
+            getActivity().startService(message);
+        } else {
+            Toast.makeText(getActivity(), "Error", Toast.LENGTH_LONG).show();
+        }
+        mObserverAdapter.removeItem(viewHolder.getAdapterPosition());
+        mPresentTotal.setText(String.valueOf(++mCount));
+        Calendar calendar = Calendar.getInstance();
+        ContentValues contentValues = new ContentValues();
+        contentValues.put(TableNames.table1.mBoardingTime, calendar.getTimeInMillis());
+        getActivity().getContentResolver().update(Uri.withAppendedPath(TableNames.mAttendanceContentUri, queryParam), contentValues, null, null);
     }
 
     private void startSession() {

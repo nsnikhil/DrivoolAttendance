@@ -51,4 +51,9 @@
     <string name="hello_blank_fragment">Hello blank fragment</string>
     <!-- -->
 
+    <!-- urls-->
+    <string name="urlBaseUrl">http://isirs.org/bus_tracking_ws/student_data.php</string>
+    <string name="urlLocationUrl">https://maps.google.com/?ll=</string>
+    <!-- -->
+
 </resources>

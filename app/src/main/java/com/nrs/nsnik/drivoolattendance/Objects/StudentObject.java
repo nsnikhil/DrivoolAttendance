@@ -3,14 +3,15 @@ package com.nrs.nsnik.drivoolattendance.Objects;
 
 public class StudentObject {
 
-    private String mName,nStudentId,mPhoneNo;
-    private int mId,mpickUpStatus;
+    private String mName,nStudentId,mPhoneNo,mPhotoUrl;
+    private int mId;
 
-    public StudentObject(int id,String name,String sId,String phoneNo){
+    public StudentObject(int id,String name,String sId,String phoneNo,String photoUrl){
         mId = id;
         mName = name;
         nStudentId = sId;
         mPhoneNo = phoneNo;
+        mPhotoUrl = photoUrl;
     }
 
     public int getmId() {
@@ -29,7 +30,6 @@ public class StudentObject {
         return mPhoneNo;
     }
 
-    public int getMpickUpStatus() {
-        return mpickUpStatus;
+    public String getmPhotoUrl() {return mPhotoUrl;
     }
 }

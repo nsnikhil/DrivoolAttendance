@@ -13,7 +13,8 @@ class TableHelper extends SQLiteOpenHelper{
             + table0.mId + " INTEGER PRIMARY KEY AUTOINCREMENT, "
             + table0.mName + " TEXT NOT NULL, "
             + table0.mStudentId + " TEXT NOT NULL, "
-            + table0.mParentPhoneNo + " TEXT NOT NULL "
+            + table0.mParentPhoneNo + " TEXT NOT NULL, "
+            + table0.mPhotoUrl + " TEXT NOT NULL "
             + " );";
 
     private static final String mCreateAttendanceTable = "CREATE TABLE " + TableNames.mTableAttendanceName + " ("
