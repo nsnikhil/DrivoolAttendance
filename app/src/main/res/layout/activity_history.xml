@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    style="@style/matchParent"
+    tools:context="com.nrs.nsnik.drivoolattendance.HistoryActivity">
+
+    <include
+        android:id="@+id/historyToolbar"
+        layout="@layout/toolbar" />
+
+    <ListView
+        android:id="@+id/historyList"
+        style="@style/matchParent"
+        android:layout_below="@id/historyToolbar" />
+
+</RelativeLayout>

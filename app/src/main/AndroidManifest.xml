@@ -2,8 +2,8 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.nrs.nsnik.drivoolattendance">
 
-    <uses-permission android:name="android.permission.INTERNET"/>
-    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 
     <application
         android:allowBackup="true"
@@ -19,16 +19,27 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
         <provider
-            android:exported="false"
+            android:name=".data.TableProvider"
             android:authorities="com.nrs.nsnik.drivoolattendance"
-            android:name=".data.TableProvider"/>
-        <service android:name=".services.SendSmsService"
-            android:description="@string/servicedescription"
-            android:exported="false"/>
+            android:exported="false" />
+
         <service
-            android:exported="false"
-            android:name=".services.AttendanceService"/>
+            android:name=".services.SendSmsService"
+            android:description="@string/servicedescription"
+            android:exported="false" />
+        <service
+            android:name=".services.AttendanceService"
+            android:exported="false" />
+
+        <activity
+            android:name=".HistoryActivity"
+            android:label="@string/navHistory" />
+
+        <activity android:name=".TripSummaryActivity"
+            android:label="@string/tripsummary"/>
+
     </application>
 
 </manifest>

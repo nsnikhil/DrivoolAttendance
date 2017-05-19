@@ -2,20 +2,18 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
     <item android:title="@string/navList"
         android:icon="@drawable/ic_view_list_white_48dp"
+        android:checked="true"
+        android:checkable="true"
         android:id="@+id/navItemAttendance"/>
 
     <item android:title="@string/navHistory"
+        android:checkable="true"
         android:icon="@drawable/ic_history_white_48dp"
         android:id="@+id/navItemOther"/>
 
     <item android:title="@string/navSetting"
         android:icon="@drawable/ic_settings_white_48dp"
+        android:checkable="true"
         android:id="@+id/navItemSettings"/>
-
-    <item android:checkable="true"
-        android:id="@+id/navItemTest"
-        android:checked="true"
-        android:icon="@drawable/ic_data_usage_white_48dp"
-        android:title="@string/navTestMode"/>
 
 </menu>

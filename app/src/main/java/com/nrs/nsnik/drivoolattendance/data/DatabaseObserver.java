@@ -42,8 +42,6 @@ public class DatabaseObserver implements ObservableInterface, LoaderManager.Load
 
     @Override
     public void notifyObserver(Cursor cursor) {
-        Log.d("size",mObserverInterfaces.size()+"");
-        Log.d("csize",cursor.getCount()+"");
         for(ObserverInterface interfaces : mObserverInterfaces){
             interfaces.update(cursor);
         }
@@ -60,7 +58,6 @@ public class DatabaseObserver implements ObservableInterface, LoaderManager.Load
 
     @Override
     public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
-        //Log.d("Cusor",mObserverInterfaces.size()+"");
         notifyObserver(data);
     }
 

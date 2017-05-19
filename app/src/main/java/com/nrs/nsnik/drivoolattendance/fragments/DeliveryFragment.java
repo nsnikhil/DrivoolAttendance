@@ -12,11 +12,13 @@ import android.graphics.Paint;
 import android.graphics.RectF;
 import android.net.Uri;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.support.v4.app.Fragment;
 import android.support.v4.view.ViewPager;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.helper.ItemTouchHelper;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -25,6 +27,7 @@ import android.widget.Toast;
 
 import com.nrs.nsnik.drivoolattendance.Objects.AttendanceObject;
 import com.nrs.nsnik.drivoolattendance.R;
+import com.nrs.nsnik.drivoolattendance.TripSummaryActivity;
 import com.nrs.nsnik.drivoolattendance.adapters.ObserverAdapter;
 import com.nrs.nsnik.drivoolattendance.data.TableNames;
 import com.nrs.nsnik.drivoolattendance.interfaces.NotifyInterface;
@@ -41,6 +44,7 @@ public class DeliveryFragment extends Fragment implements NotifyInterface{
 
     @BindView(R.id.deliveryRecyclerView) RecyclerView mDeliveryRecyclerView;
     @BindView(R.id.deliveryPickUp) Button mDeliveryPickFirst;
+    private static final String NULL_VALUE = "N/A";
     private static final String LOG_TAG = DeliveryFragment.class.getSimpleName();
     private Unbinder mUnbinder;
     private ObserverAdapter mObserverAdapter;
@@ -142,9 +146,62 @@ public class DeliveryFragment extends Fragment implements NotifyInterface{
     private void notified(){
         if(mDeliveryRecyclerView.getAdapter().getItemCount()<=0){
             mDeliveryPickFirst.setVisibility(View.VISIBLE);
+            if(PreferenceManager.getDefaultSharedPreferences(getActivity()).getBoolean(getActivity().getResources().getString(R.string.prefTripStatus),false)){
+                if(tripFinished()){
+                    PreferenceManager.getDefaultSharedPreferences(getActivity()).edit().putBoolean(getString(R.string.prefTripStatus),false).apply();
+                }
+            }
         }else {
             mDeliveryPickFirst.setVisibility(View.GONE);
         }
+    }
+
+    private boolean tripFinished(){
+        int counter = 0;
+        int count = -1;
+        Cursor sessionCursor = getActivity().getContentResolver().query(TableNames.mAttendanceContentUri,null,null,null,null);
+        try{
+            if(sessionCursor!=null&&sessionCursor.moveToLast()){
+                String sessionUri = "session/"+sessionCursor.getInt(sessionCursor.getColumnIndex(TableNames.table1.mSessionId));
+                Cursor current  = getActivity().getContentResolver().query(Uri.withAppendedPath(TableNames.mAttendanceContentUri,sessionUri),null,null,null,null);
+                if(current!=null){count = current.getCount();}
+                try{
+                    while (current!=null&&current.moveToNext()){
+                        if(current.getString(current.getColumnIndex(TableNames.table1.mBoardingTime)).equalsIgnoreCase(NULL_VALUE)||
+                                current.getString(current.getColumnIndex(TableNames.table1.mExitTime)).equalsIgnoreCase(NULL_VALUE)){
+                            return false;
+                        }else {
+                            counter++;
+                        }
+                    }
+                    if(counter==count){
+                        mDeliveryPickFirst.setVisibility(View.GONE);
+                        ContentValues contentValues = new ContentValues();
+                        contentValues.put(TableNames.table2.mTripStatus, 1);
+                        getActivity().getContentResolver().update(Uri.withAppendedPath(TableNames.mSessionContentUri
+                                ,String.valueOf(sessionCursor.getInt(sessionCursor.getColumnIndex(TableNames.table1.mSessionId)))),contentValues,null,null);
+                        PreferenceManager.getDefaultSharedPreferences(getActivity()).edit().putBoolean(getString(R.string.prefTripStatus),false).apply();
+                        Intent summary = new Intent(getActivity(), TripSummaryActivity.class);
+                        summary.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                        summary.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                        startActivity(summary);
+                    }
+                }catch (Exception e){
+                    e.printStackTrace();
+                }finally {
+                    if(current!=null){
+                        current.close();
+                    }
+                }
+            }
+        }catch (Exception e){
+            e.printStackTrace();
+        }finally {
+            if(sessionCursor!=null){
+                sessionCursor.close();
+            }
+        }
+        return true;
     }
 
     @Override

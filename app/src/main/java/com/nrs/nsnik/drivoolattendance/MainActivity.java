@@ -1,5 +1,6 @@
 package com.nrs.nsnik.drivoolattendance;
 
+import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
@@ -75,7 +76,7 @@ public class MainActivity extends AppCompatActivity {
                         Toast.makeText(MainActivity.this,"Attendance",Toast.LENGTH_SHORT).show();
                         break;
                     case R.id.navItemOther:
-                        Toast.makeText(MainActivity.this,"History",Toast.LENGTH_SHORT).show();
+                        startActivity(new Intent(MainActivity.this,HistoryActivity.class));
                         break;
                     case R.id.navItemSettings:
                         Toast.makeText(MainActivity.this,"Settings",Toast.LENGTH_SHORT).show();
@@ -89,21 +90,5 @@ public class MainActivity extends AppCompatActivity {
     private void listener(){
     }
 
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.main_menu,menu);
-        return super.onCreateOptionsMenu(menu);
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        switch (item.getItemId()){
-            case R.id.menuMainDone:
-                break;
-            case R.id.menuMainChange:
-                break;
-        }
-        return super.onOptionsItemSelected(item);
-    }
 
 }
