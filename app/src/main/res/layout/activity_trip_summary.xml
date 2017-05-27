@@ -20,6 +20,7 @@
             <TextView
                 style="@style/stretchedVertically"
                 android:textSize="18sp"
+                android:id="@+id/summaryStartTime"
                 android:textStyle="bold"
                 android:fontFamily="sans-serif-thin"
                 android:padding="@dimen/sixteen"
@@ -29,6 +30,7 @@
                 style="@style/stretchedVertically"
                 android:textSize="18sp"
                 android:textStyle="bold"
+                android:id="@+id/summaryEndTime"
                 android:fontFamily="sans-serif-thin"
                 android:padding="@dimen/sixteen"
                 android:text="@string/edntime" />
@@ -50,6 +52,7 @@
                 style="@style/stretchedVertically"
                 android:textSize="18sp"
                 android:textStyle="bold"
+                android:id="@+id/summaryTotalStudent"
                 android:fontFamily="sans-serif-thin"
                 android:padding="@dimen/sixteen"
                 android:text="@string/total" />
@@ -58,6 +61,7 @@
                 style="@style/stretchedVertically"
                 android:textSize="18sp"
                 android:textStyle="bold"
+                android:id="@+id/summaryTotalPresent"
                 android:fontFamily="sans-serif-thin"
                 android:padding="@dimen/sixteen"
                 android:text="@string/present" />
@@ -66,6 +70,7 @@
                 style="@style/stretchedVertically"
                 android:textSize="18sp"
                 android:textStyle="bold"
+                android:id="@+id/summaryTotalAbsent"
                 android:fontFamily="sans-serif-thin"
                 android:padding="@dimen/sixteen"
                 android:text="@string/absent" />

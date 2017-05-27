@@ -56,7 +56,12 @@ public class HistoryActivity extends AppCompatActivity implements LoaderManager.
         mHistoryList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                startActivity(new Intent(HistoryActivity.this,TripSummaryActivity.class));
+                Cursor c  = (Cursor) parent.getItemAtPosition(position);
+                if(c.moveToFirst()){
+                    Intent history = new Intent(HistoryActivity.this,TripSummaryActivity.class);
+                    history.putExtra(getResources().getString(R.string.intentKeySessionId),c.getInt(c.getColumnIndex(TableNames.table2.mSessionId)));
+                    startActivity(history);
+                }
             }
         });
     }

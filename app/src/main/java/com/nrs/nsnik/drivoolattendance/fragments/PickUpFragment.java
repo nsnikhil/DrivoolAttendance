@@ -58,26 +58,19 @@ import butterknife.Unbinder;
 public class PickUpFragment extends Fragment implements FakeItems, NotifyInterface, GetLocationInterface {
 
     private static final String NULL_VALUE = "N/A";
-    private static int mCount = 0;
+    private static final String ABSENT  = "ABSENT";
     @BindView(R.id.pickUpStartTrip) Button mStartTrip;
     @BindView(R.id.pickUpCounterContainer) LinearLayout mCounterContainer;
     @BindView(R.id.pickUpRecyclerView) RecyclerView mMainRecyclerView;
-    @BindView(R.id.counterTotal) TextView mCounterTotal;
-    @BindView(R.id.counterCurrent) TextView mPresentTotal;
     Fragment mThisFragment;
-    private double mLat, mLng;
+    List<Integer> tempPosition;
+    List<String> studentIds;
     GetLocation mGetLocation;
-    Intent mAttenService;
     private ObserverAdapter mObserverAdapter;
     private static final String TAG = PickUpFragment.class.getSimpleName();
     private static final int LOCATION_PERMISSION = 56;
-    private Paint p = new Paint();
     private Unbinder mUnbinder;
-    private int mTempPosition;
     String mLocationLink;
-    List<Integer> mTempList;
-    Location mLocation;
-    RecyclerView.ViewHolder mTempViewHolder;
 
     public PickUpFragment() {
     }
@@ -94,7 +87,8 @@ public class PickUpFragment extends Fragment implements FakeItems, NotifyInterfa
     }
 
     private void initialize() {
-        mTempList = new ArrayList<>();
+        tempPosition = new ArrayList<>();
+        studentIds  = new ArrayList<>();
         mMainRecyclerView.setLayoutManager(new GridLayoutManager(getActivity(), 2));
         mObserverAdapter = new ObserverAdapter(getActivity(), getLoaderManager(), 0, this);
         mMainRecyclerView.setAdapter(mObserverAdapter);
@@ -103,29 +97,32 @@ public class PickUpFragment extends Fragment implements FakeItems, NotifyInterfa
     @Override
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
         inflater.inflate(R.menu.pickup_menu,menu);
+        MenuItem item = menu.getItem(1);
+        item.setVisible(false);
     }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()){
             case R.id.menuPickUpSend:
-                mTempList.clear();
+                tempPosition.clear();
+                studentIds.clear();
                 for(int i=0;i<mMainRecyclerView.getChildCount();i++){
-                    Log.d("size0", mTempList.size()+"");
-                    Log.d("count",mMainRecyclerView.getChildCount()+"");
                     View v = mMainRecyclerView.getChildAt(i);
                     ImageView image = (ImageView) v.findViewById(R.id.itemCheckedStatus);
                     if(image.getVisibility()==View.VISIBLE){
-                        mTempList.add(i);
+                        studentIds.add(mObserverAdapter.getItem(i).getmStudentId());
+                        tempPosition.add(i);
                     }else {
                         Log.d(TAG, "Gone");
                     }
-                }if(mTempList.size()>0) {
-                mGetLocation = new GetLocation();
-                mGetLocation.setTargetFragment(mThisFragment, 14);
-                mGetLocation.show(getFragmentManager(), "location");
-            }
-                break;
+                }
+                if(tempPosition.size()>0) {
+                    mGetLocation = new GetLocation();
+                    mGetLocation.setTargetFragment(mThisFragment, 14);
+                    mGetLocation.show(getFragmentManager(), "location");
+                }
+            break;
         }
         return super.onOptionsItemSelected(item);
     }
@@ -149,17 +146,20 @@ public class PickUpFragment extends Fragment implements FakeItems, NotifyInterfa
 
     @Override
     public void getLocation(Location location) {
-        mLocation  = location;
-        mLat = location.getLatitude();
-        mLng = location.getLongitude();
+        double mLat = location.getLatitude();
+        double mLng = location.getLongitude();
         mGetLocation.dismiss();
-        mLocationLink = getResources().getString(R.string.urlLocationUrl)+mLat+","+mLng;
-        Log.d("size", mTempList.size()+"");
-        for(int pos : mTempList){
-            Log.d("pos", pos+"");
-            sendSms(pos,mLocationLink);
+        mLocationLink = getResources().getString(R.string.urlLocationUrl)+ mLat +","+ mLng;
+        removeItems(mLocationLink);
+    }
+
+    private void removeItems(String message){
+        for(int i = tempPosition.get(tempPosition.size()-1);i>tempPosition.size();i--){
+            mObserverAdapter.removeItem(i);
         }
-        //swipeAction(mTempViewHolder,mLocationLink);
+        for(String sId : studentIds){
+            sendSms(sId,message);
+        }
     }
 
     private void listener() {
@@ -169,57 +169,10 @@ public class PickUpFragment extends Fragment implements FakeItems, NotifyInterfa
                checkPermission();
             }
         });
-        new ItemTouchHelper(new ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT | ItemTouchHelper.RIGHT) {
-            @Override
-            public boolean onMove(RecyclerView recyclerView, RecyclerView.ViewHolder viewHolder, RecyclerView.ViewHolder target) {
-                return false;
-            }
-
-            @Override
-            public void onSwiped(RecyclerView.ViewHolder viewHolder, int direction) {
-                if (direction == ItemTouchHelper.LEFT) {
-                    mObserverAdapter.removeItem(viewHolder.getAdapterPosition());
-                } else {
-                    mTempViewHolder  = viewHolder;
-                    mGetLocation = new GetLocation();
-                    mGetLocation.setTargetFragment(mThisFragment,14);
-                    mGetLocation.show(getFragmentManager(),"location");
-                }
-            }
-
-            @Override
-            public void onChildDraw(Canvas c, RecyclerView recyclerView, RecyclerView.ViewHolder viewHolder, float dX, float dY, int actionState, boolean isCurrentlyActive) {
-                Bitmap icon;
-                if (actionState == ItemTouchHelper.ACTION_STATE_SWIPE) {
-                    View itemView = viewHolder.itemView;
-                    float height = (float) itemView.getBottom() - (float) itemView.getTop();
-                    float width = height / 3;
-                    if (dX > 0) {
-                        p.setColor(Color.parseColor("#388E3C"));
-                        RectF background = new RectF((float) itemView.getLeft(), (float) itemView.getTop(), itemView.getRight(), (float) itemView.getBottom());
-                        c.drawRect(background, p);
-                        icon = BitmapFactory.decodeResource(getResources(), R.drawable.ic_done_white_48dp);
-                        RectF icon_dest = new RectF((float) itemView.getLeft(), (float) itemView.getTop() + width, (float) itemView.getLeft() + width, (float) itemView.getBottom() - width);
-                        c.drawBitmap(icon, null, icon_dest, p);
-
-                    } else {
-                        p.setColor(Color.parseColor("#D32F2F"));
-                        RectF background = new RectF((float) itemView.getRight(), (float) itemView.getTop(), itemView.getLeft(), (float) itemView.getBottom());
-                        c.drawRect(background, p);
-                        icon = BitmapFactory.decodeResource(getResources(), R.drawable.ic_close_white_48dp);
-                        RectF icon_dest = new RectF((float) itemView.getRight() - width, (float) itemView.getTop() + width, (float) itemView.getRight(), (float) itemView.getBottom() - width);
-                        c.drawBitmap(icon, null, icon_dest, p);
-                    }
-                }
-                super.onChildDraw(c, recyclerView, viewHolder, dX, dY, actionState, isCurrentlyActive);
-            }
-
-        }).attachToRecyclerView(mMainRecyclerView);
     }
 
-    private void sendSms(int position,String messageText){
-        AttendanceObject object = mObserverAdapter.getItem(position);
-        String queryParam = "student/" + object.getmStudentId();
+    private void sendSms(String sId,String messageText){
+        String queryParam = "student/" + sId;
         Cursor cursor = getActivity().getContentResolver().query(Uri.withAppendedPath(TableNames.mContentUri, queryParam), null, null, null, null);
         if (cursor != null && cursor.moveToFirst()) {
             String name = cursor.getString(cursor.getColumnIndex(TableNames.table0.mName));
@@ -231,30 +184,6 @@ public class PickUpFragment extends Fragment implements FakeItems, NotifyInterfa
         } else {
             Toast.makeText(getActivity(), "Error", Toast.LENGTH_LONG).show();
         }
-        mObserverAdapter.removeItem(position);
-        mPresentTotal.setText(String.valueOf(++mCount));
-        Calendar calendar = Calendar.getInstance();
-        ContentValues contentValues = new ContentValues();
-        contentValues.put(TableNames.table1.mBoardingTime, calendar.getTimeInMillis());
-        getActivity().getContentResolver().update(Uri.withAppendedPath(TableNames.mAttendanceContentUri, queryParam), contentValues, null, null);
-    }
-
-    private void swipeAction(RecyclerView.ViewHolder viewHolder,String messageText){
-        AttendanceObject object = mObserverAdapter.getItem(viewHolder.getAdapterPosition());
-        String queryParam = "student/" + object.getmStudentId();
-        Cursor cursor = getActivity().getContentResolver().query(Uri.withAppendedPath(TableNames.mContentUri, queryParam), null, null, null, null);
-        if (cursor != null && cursor.moveToFirst()) {
-            String name = cursor.getString(cursor.getColumnIndex(TableNames.table0.mName));
-            String phoneNo = cursor.getString(cursor.getColumnIndex(TableNames.table0.mParentPhoneNo));
-            Intent message = new Intent(getActivity(), SendSmsService.class);
-            message.putExtra(getResources().getString(R.string.intentKeyMessage), name + " Picked Up at "+ messageText);
-            message.putExtra(getResources().getString(R.string.intentkeyPhoneNo), phoneNo);
-            getActivity().startService(message);
-        } else {
-            Toast.makeText(getActivity(), "Error", Toast.LENGTH_LONG).show();
-        }
-        mObserverAdapter.removeItem(viewHolder.getAdapterPosition());
-        mPresentTotal.setText(String.valueOf(++mCount));
         Calendar calendar = Calendar.getInstance();
         ContentValues contentValues = new ContentValues();
         contentValues.put(TableNames.table1.mBoardingTime, calendar.getTimeInMillis());
