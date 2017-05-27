@@ -2,6 +2,7 @@
     <string name="app_name">"Drivool Attendance "</string>
     <string name="startTrip">Start Trip</string>
     <string name="pickup">Pick Up a student first</string>
+    <string name="sendsms">Send Sms</string>
     <string name="no">1000</string>
     <string name="presentcount">Present Count</string>
     <string name="totalcount">Total Count</string>
@@ -35,7 +36,10 @@
 
     <!-- urls-->
     <string name="uriBaseUrl">http://59.162.167.52/api/MessageCompose?admin=dsouzaronald@gmail.com&amp;user=principal@campionmumbai.org:M2L9V7B&amp;senderID=CAMPMU</string>
+    <string name="smsBaseUrl">http://59.162.167.52/</string>
     <!-- -->
+
+    <!--string name="uriBaseUrl">http://59.162.167.52/api/MessageCompose?admin=dsouzaronald@gmail.com&amp;user=principal@campionmumbai.org:M2L9V7B&amp;senderID=CAMPMU/</string>-->
 
     <!-- prefKey-->
     <string name="prefKeyPhoneNo">prefkyphne</string>

@@ -47,9 +47,6 @@ public class LinearListAdapter extends CursorAdapter {
     public void bindView(View view, Context context, Cursor cursor) {
         mMyViewHolder = (MyViewHolder) view.getTag();
         mMyViewHolder.mItemHeader.setText(String.valueOf(cursor.getInt(cursor.getColumnIndex(TableNames.table2.mSessionId))));
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            mMyViewHolder.mItemContainer.setBackgroundTintList(stateList());
-        }
     }
 
     private int getRandom() {
@@ -70,16 +67,15 @@ public class LinearListAdapter extends CursorAdapter {
     }
 
     public class MyViewHolder extends RecyclerView.ViewHolder {
-        @BindView(R.id.itemHeadingContainer)
-        RelativeLayout mItemContainer;
-        @BindView(R.id.itemHeading)
-        TextView mItemHeader;
-        @BindView(R.id.itemName)
-        TextView mItemName;
+        @BindView(R.id.itemHeading) TextView mItemHeader;
+        @BindView(R.id.itemName) TextView mItemName;
 
         public MyViewHolder(View itemView) {
             super(itemView);
             ButterKnife.bind(this, itemView);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                mItemHeader.setBackgroundTintList(stateList());
+            }
         }
     }
 }

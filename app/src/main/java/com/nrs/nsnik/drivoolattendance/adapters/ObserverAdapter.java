@@ -4,6 +4,7 @@ import android.content.Context;
 import android.database.Cursor;
 import android.net.Uri;
 import android.support.v4.app.LoaderManager;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.widget.CardView;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
@@ -35,17 +36,20 @@ public class ObserverAdapter  extends RecyclerView.Adapter<ObserverAdapter.MyVie
 
     private List<AttendanceObject> mAttendanceList;
     private static final String NULL_VALUE = "N/A";
+    private static final String TAG = ObserverAdapter.class.getSimpleName();
     private Context mContext;
     private int mFlag;
     private static DatabaseObserver mObserver;
     private GestureDetector mGestureDetector;
     private NotifyInterface mNotifyInterface;
     private int lastPosition = -1;
+    private List<String> mPresentList;
 
     public ObserverAdapter(Context context, LoaderManager manager, int flag,NotifyInterface notifyInterface){
         mContext = context;
         mFlag = flag;
         mAttendanceList = new ArrayList<>();
+        mPresentList = new ArrayList<>();
         mNotifyInterface = notifyInterface;
         mObserver  = new DatabaseObserver(mContext,manager);
         mGestureDetector = new GestureDetector(context, new GestureListener());
@@ -58,7 +62,7 @@ public class ObserverAdapter  extends RecyclerView.Adapter<ObserverAdapter.MyVie
     }
 
     @Override
-    public void onBindViewHolder(MyViewHolder holder, int position) {
+    public void onBindViewHolder(MyViewHolder holder, final int position) {
         AttendanceObject object = mAttendanceList.get(position);
         String queryParam = "student/"+object.getmStudentId();
         Cursor cursor = mContext.getContentResolver().query(Uri.withAppendedPath(TableNames.mContentUri,queryParam),null,null,null,null);
@@ -83,7 +87,6 @@ public class ObserverAdapter  extends RecyclerView.Adapter<ObserverAdapter.MyVie
 
     @Override
     public void update(Cursor cursor) {
-        Log.d("acsize",cursor.getCount()+"");
         makeAttendanceList(cursor);
     }
 
@@ -152,6 +155,15 @@ public class ObserverAdapter  extends RecyclerView.Adapter<ObserverAdapter.MyVie
         notifyDataSetChanged();
     }
 
+    public List<String> getMarkedCount(){
+        return mPresentList;
+    }
+
+    public void resetMarked(){
+
+    }
+
+
     public class MyViewHolder extends RecyclerView.ViewHolder {
         @BindView(R.id.itemName) TextView mItemName;
         @BindView(R.id.itemImage) ImageView mItemImage;
@@ -161,6 +173,18 @@ public class ObserverAdapter  extends RecyclerView.Adapter<ObserverAdapter.MyVie
             super(itemView);
             itemView.setClickable(true);
             ButterKnife.bind(this,itemView);
+            itemView.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    if(mItemChecked.getVisibility()==View.VISIBLE){
+                        mPresentList.remove(mAttendanceList.get(getAdapterPosition()).getmStudentId());
+                        mItemChecked.setVisibility(View.GONE);
+                    }else {
+                        mPresentList.add(mAttendanceList.get(getAdapterPosition()).getmStudentId());
+                        mItemChecked.setVisibility(View.VISIBLE);
+                    }
+                }
+            });
         }
     }
 }

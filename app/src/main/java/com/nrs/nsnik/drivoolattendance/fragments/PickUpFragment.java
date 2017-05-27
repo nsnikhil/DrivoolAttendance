@@ -14,6 +14,7 @@ import android.graphics.Paint;
 import android.graphics.RectF;
 import android.location.Location;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.v4.app.ActivityCompat;
@@ -23,9 +24,13 @@ import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.helper.ItemTouchHelper;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -41,7 +46,9 @@ import com.nrs.nsnik.drivoolattendance.interfaces.GetLocationInterface;
 import com.nrs.nsnik.drivoolattendance.interfaces.NotifyInterface;
 import com.nrs.nsnik.drivoolattendance.services.SendSmsService;
 
+import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.List;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -62,11 +69,14 @@ public class PickUpFragment extends Fragment implements FakeItems, NotifyInterfa
     GetLocation mGetLocation;
     Intent mAttenService;
     private ObserverAdapter mObserverAdapter;
-    private static final String LOG_TAG = PickUpFragment.class.getSimpleName();
+    private static final String TAG = PickUpFragment.class.getSimpleName();
     private static final int LOCATION_PERMISSION = 56;
     private Paint p = new Paint();
     private Unbinder mUnbinder;
+    private int mTempPosition;
     String mLocationLink;
+    List<Integer> mTempList;
+    Location mLocation;
     RecyclerView.ViewHolder mTempViewHolder;
 
     public PickUpFragment() {
@@ -79,14 +89,47 @@ public class PickUpFragment extends Fragment implements FakeItems, NotifyInterfa
         initialize();
         listener();
         mThisFragment = this;
+        setHasOptionsMenu(true);
         return v;
     }
 
     private void initialize() {
+        mTempList = new ArrayList<>();
         mMainRecyclerView.setLayoutManager(new GridLayoutManager(getActivity(), 2));
         mObserverAdapter = new ObserverAdapter(getActivity(), getLoaderManager(), 0, this);
         mMainRecyclerView.setAdapter(mObserverAdapter);
     }
+
+    @Override
+    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+        inflater.inflate(R.menu.pickup_menu,menu);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()){
+            case R.id.menuPickUpSend:
+                mTempList.clear();
+                for(int i=0;i<mMainRecyclerView.getChildCount();i++){
+                    Log.d("size0", mTempList.size()+"");
+                    Log.d("count",mMainRecyclerView.getChildCount()+"");
+                    View v = mMainRecyclerView.getChildAt(i);
+                    ImageView image = (ImageView) v.findViewById(R.id.itemCheckedStatus);
+                    if(image.getVisibility()==View.VISIBLE){
+                        mTempList.add(i);
+                    }else {
+                        Log.d(TAG, "Gone");
+                    }
+                }if(mTempList.size()>0) {
+                mGetLocation = new GetLocation();
+                mGetLocation.setTargetFragment(mThisFragment, 14);
+                mGetLocation.show(getFragmentManager(), "location");
+            }
+                break;
+        }
+        return super.onOptionsItemSelected(item);
+    }
+
 
     private void checkPermission(){
         if (ActivityCompat.checkSelfPermission(getActivity(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
@@ -106,11 +149,17 @@ public class PickUpFragment extends Fragment implements FakeItems, NotifyInterfa
 
     @Override
     public void getLocation(Location location) {
+        mLocation  = location;
         mLat = location.getLatitude();
         mLng = location.getLongitude();
         mGetLocation.dismiss();
         mLocationLink = getResources().getString(R.string.urlLocationUrl)+mLat+","+mLng;
-        swipeAction(mTempViewHolder,mLocationLink);
+        Log.d("size", mTempList.size()+"");
+        for(int pos : mTempList){
+            Log.d("pos", pos+"");
+            sendSms(pos,mLocationLink);
+        }
+        //swipeAction(mTempViewHolder,mLocationLink);
     }
 
     private void listener() {
@@ -166,6 +215,28 @@ public class PickUpFragment extends Fragment implements FakeItems, NotifyInterfa
             }
 
         }).attachToRecyclerView(mMainRecyclerView);
+    }
+
+    private void sendSms(int position,String messageText){
+        AttendanceObject object = mObserverAdapter.getItem(position);
+        String queryParam = "student/" + object.getmStudentId();
+        Cursor cursor = getActivity().getContentResolver().query(Uri.withAppendedPath(TableNames.mContentUri, queryParam), null, null, null, null);
+        if (cursor != null && cursor.moveToFirst()) {
+            String name = cursor.getString(cursor.getColumnIndex(TableNames.table0.mName));
+            String phoneNo = cursor.getString(cursor.getColumnIndex(TableNames.table0.mParentPhoneNo));
+            Intent message = new Intent(getActivity(), SendSmsService.class);
+            message.putExtra(getResources().getString(R.string.intentKeyMessage), name + " Picked Up at "+ messageText);
+            message.putExtra(getResources().getString(R.string.intentkeyPhoneNo), phoneNo);
+            getActivity().startService(message);
+        } else {
+            Toast.makeText(getActivity(), "Error", Toast.LENGTH_LONG).show();
+        }
+        mObserverAdapter.removeItem(position);
+        mPresentTotal.setText(String.valueOf(++mCount));
+        Calendar calendar = Calendar.getInstance();
+        ContentValues contentValues = new ContentValues();
+        contentValues.put(TableNames.table1.mBoardingTime, calendar.getTimeInMillis());
+        getActivity().getContentResolver().update(Uri.withAppendedPath(TableNames.mAttendanceContentUri, queryParam), contentValues, null, null);
     }
 
     private void swipeAction(RecyclerView.ViewHolder viewHolder,String messageText){

@@ -1,35 +1,52 @@
 package com.nrs.nsnik.drivoolattendance.Objects;
 
 
+import com.google.gson.annotations.SerializedName;
+
 public class StudentObject {
 
-    private String mName,nStudentId,mPhoneNo,mPhotoUrl;
-    private int mId;
 
-    public StudentObject(int id,String name,String sId,String phoneNo,String photoUrl){
-        mId = id;
-        mName = name;
-        nStudentId = sId;
-        mPhoneNo = phoneNo;
-        mPhotoUrl = photoUrl;
+    @SerializedName("studentName")
+    private String mStudentName;
+
+    @SerializedName("contactNumber")
+    private String mContactNo;
+
+    @SerializedName("intellinect_id")
+    private String mStudentId;
+
+    @SerializedName("photo")
+    private String mPhotoUrl;
+
+    public void setmStudentName(String mStudentName) {
+        this.mStudentName = mStudentName;
     }
 
-    public int getmId() {
-        return mId;
+    public void setmContactNo(String mContactNo) {
+        this.mContactNo = mContactNo;
     }
 
-    public String getmName() {
-        return mName;
+    public void setmStudentId(String mStudentId) {
+        this.mStudentId = mStudentId;
     }
 
-    public String getnStudentId() {
-        return nStudentId;
+    public void setmPhotoUrl(String mPhotoUrl) {
+        this.mPhotoUrl = mPhotoUrl;
     }
 
-    public String getmPhoneNo() {
-        return mPhoneNo;
+    public String getmStudentName() {
+        return mStudentName;
     }
 
-    public String getmPhotoUrl() {return mPhotoUrl;
+    public String getmStudentId() {
+        return mStudentId;
+    }
+
+    public String getmContactNo() {
+        return mContactNo;
+    }
+
+    public String getmPhotoUrl() {
+        return mPhotoUrl;
     }
 }
