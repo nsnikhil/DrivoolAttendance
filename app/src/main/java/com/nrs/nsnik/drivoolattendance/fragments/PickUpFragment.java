@@ -71,6 +71,8 @@ public class PickUpFragment extends Fragment implements FakeItems, NotifyInterfa
     private static final int LOCATION_PERMISSION = 56;
     private Unbinder mUnbinder;
     String mLocationLink;
+    private TextView mCounterText;
+    private int mChildCount;
 
     public PickUpFragment() {
     }
@@ -87,6 +89,7 @@ public class PickUpFragment extends Fragment implements FakeItems, NotifyInterfa
     }
 
     private void initialize() {
+        mCounterText = (TextView) getActivity().findViewById(R.id.mainCounter);
         tempPosition = new ArrayList<>();
         studentIds  = new ArrayList<>();
         mMainRecyclerView.setLayoutManager(new GridLayoutManager(getActivity(), 2));
@@ -201,8 +204,9 @@ public class PickUpFragment extends Fragment implements FakeItems, NotifyInterfa
         }
     }
 
-    private void addRefreshedTryAdapter() {
+    private void addRefreshedTryAdapter(){
         Cursor cursor = getActivity().getContentResolver().query(TableNames.mContentUri, null, null, null, null);
+        if(cursor!=null){mChildCount = cursor.getCount();}
         Cursor sessionCursor = getActivity().getContentResolver().query(TableNames.mSessionContentUri, null, null, null, null);
         try {
             while (cursor != null && cursor.moveToNext()) {
@@ -232,6 +236,8 @@ public class PickUpFragment extends Fragment implements FakeItems, NotifyInterfa
         PreferenceManager.getDefaultSharedPreferences(getActivity()).edit()
                 .putBoolean(getActivity().getResources().getString(R.string.prefTripStatus),true).apply();
 
+        mCounterText.setVisibility(View.VISIBLE);
+        if(mCounterText!=null){ mCounterText.setText("0/"+mChildCount);}else {Log.d(TAG, "Null");}
         //mAttenService = new Intent(getActivity(), AttendanceService.class);
         //getActivity().startService(mAttenService);
 
@@ -249,7 +255,10 @@ public class PickUpFragment extends Fragment implements FakeItems, NotifyInterfa
     }
 
     private void notified() {
+        int count = mChildCount-mMainRecyclerView.getAdapter().getItemCount();
+        if(mCounterText!=null){  mCounterText.setText(count+"/"+mChildCount);}else {Log.d(TAG, "Null");}
         if (mMainRecyclerView.getAdapter().getItemCount() <= 0) {
+            mCounterText.setVisibility(View.GONE);
             mStartTrip.setVisibility(View.VISIBLE);
             if(PreferenceManager.getDefaultSharedPreferences(getActivity()).getBoolean(getActivity().getResources().getString(R.string.prefTripStatus),false)){
                 mStartTrip.setEnabled(false);
@@ -259,6 +268,7 @@ public class PickUpFragment extends Fragment implements FakeItems, NotifyInterfa
                 mStartTrip.setText(getActivity().getResources().getString(R.string.startTrip));
             }
         } else {
+            mCounterText.setVisibility(View.VISIBLE);
             mStartTrip.setVisibility(View.GONE);
         }
     }

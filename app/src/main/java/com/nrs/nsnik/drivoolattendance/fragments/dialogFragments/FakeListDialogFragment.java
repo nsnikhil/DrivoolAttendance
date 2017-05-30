@@ -2,6 +2,7 @@ package com.nrs.nsnik.drivoolattendance.fragments.dialogFragments;
 
 
 import android.content.ContentValues;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
@@ -47,9 +48,12 @@ public class FakeListDialogFragment extends DialogFragment {
     Button mCreate;
     private static final String NULL_VALUE = "N/A";
     private static final String TAG = FakeListDialogFragment.class.getSimpleName();
+    private SharedPreferences mPreferences;
     private FakeItems mFakeItems;
     private Unbinder mUnbinder;
     private Retrofit mRetrofit;
+    private static String mBaseUrl;
+    private static String mBaseExtraUrl;
 
     public FakeListDialogFragment() {
 
@@ -67,7 +71,7 @@ public class FakeListDialogFragment extends DialogFragment {
     }
 
     private void initialize() {
-
+        mPreferences = PreferenceManager.getDefaultSharedPreferences(getActivity());
     }
 
     private void listeners() {
@@ -77,6 +81,10 @@ public class FakeListDialogFragment extends DialogFragment {
                 if (verifyField()) {
                     PreferenceManager.getDefaultSharedPreferences(getActivity()).edit()
                             .putString(getActivity().getResources().getString(R.string.prefKeyPhoneNo), NULL_VALUE).apply();
+                    mBaseUrl =  mPreferences.getString(getResources().getString(R.string.prefServerBaseKey)
+                            ,getActivity().getResources().getString(R.string.serverBaseUrl));
+                    mBaseExtraUrl =  mPreferences.getString(getResources().getString(R.string.prefServerExtraKey)
+                            ,getActivity().getResources().getString(R.string.serverExtraParams));
                     getStudentList();
                 }
             }
@@ -92,7 +100,7 @@ public class FakeListDialogFragment extends DialogFragment {
 
     private void getStudentList(){
         RetroFitApiCalls apiClass = getStudentClient().create(RetroFitApiCalls.class);
-        apiClass.getStudentList(getParams()).enqueue(new Callback<List<StudentObject>>() {
+        apiClass.getStudentUrl(mBaseExtraUrl,getParams()).enqueue(new Callback<List<StudentObject>>() {
             @Override
             public void onResponse(@NonNull Call<List<StudentObject>> call, @NonNull Response<List<StudentObject>> response) {
                 insertInDatabase(response.body());
@@ -103,6 +111,7 @@ public class FakeListDialogFragment extends DialogFragment {
             }
         });
     }
+
 
     private void insertInDatabase(List<StudentObject> objects){
         String phoneNo = mPhoneNo.getText().toString();
@@ -121,13 +130,14 @@ public class FakeListDialogFragment extends DialogFragment {
     }
 
     private Retrofit getStudentClient() {
+
         HttpLoggingInterceptor interceptor = new HttpLoggingInterceptor();
         interceptor.setLevel(HttpLoggingInterceptor.Level.BODY);
         OkHttpClient client = new OkHttpClient.Builder().addInterceptor(interceptor).build();
         if (mRetrofit == null) {
             mRetrofit = new Retrofit.Builder()
                     .client(client)
-                    .baseUrl("http://isirs.org/")
+                    .baseUrl(mBaseUrl)
                     .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
                     .addConverterFactory(GsonConverterFactory.create())
                     .build();

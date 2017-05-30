@@ -90,7 +90,7 @@ public class MainActivity extends AppCompatActivity {
                         startActivity(new Intent(MainActivity.this,HistoryActivity.class));
                         break;
                     case R.id.navItemSettings:
-                        Toast.makeText(MainActivity.this,"Settings",Toast.LENGTH_SHORT).show();
+                        startActivity(new Intent(MainActivity.this,SettingsActivity.class));
                         break;
                 }
                 return false;

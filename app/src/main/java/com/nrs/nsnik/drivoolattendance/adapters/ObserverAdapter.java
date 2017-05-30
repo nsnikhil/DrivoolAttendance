@@ -2,7 +2,10 @@ package com.nrs.nsnik.drivoolattendance.adapters;
 
 import android.content.Context;
 import android.database.Cursor;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.net.Uri;
+import android.support.annotation.NonNull;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.widget.CardView;
@@ -24,12 +27,22 @@ import com.nrs.nsnik.drivoolattendance.data.DatabaseObserver;
 import com.nrs.nsnik.drivoolattendance.data.TableNames;
 import com.nrs.nsnik.drivoolattendance.interfaces.NotifyInterface;
 import com.nrs.nsnik.drivoolattendance.interfaces.ObserverInterface;
+import com.nrs.nsnik.drivoolattendance.interfaces.RetroFitApiCalls;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
+import okhttp3.OkHttpClient;
+import okhttp3.ResponseBody;
+import okhttp3.logging.HttpLoggingInterceptor;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
+import retrofit2.Retrofit;
+import retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory;
+import retrofit2.converter.gson.GsonConverterFactory;
 
 
 public class ObserverAdapter  extends RecyclerView.Adapter<ObserverAdapter.MyViewHolder> implements ObserverInterface{
@@ -44,6 +57,7 @@ public class ObserverAdapter  extends RecyclerView.Adapter<ObserverAdapter.MyVie
     private NotifyInterface mNotifyInterface;
     private int lastPosition = -1;
     private List<String> mPresentList;
+    private Retrofit mRetrofit;
 
     public ObserverAdapter(Context context, LoaderManager manager, int flag,NotifyInterface notifyInterface){
         mContext = context;
@@ -68,7 +82,8 @@ public class ObserverAdapter  extends RecyclerView.Adapter<ObserverAdapter.MyVie
         Cursor cursor = mContext.getContentResolver().query(Uri.withAppendedPath(TableNames.mContentUri,queryParam),null,null,null,null);
         try{
             if(cursor!=null&&cursor.moveToFirst()){
-                holder.mItemName.setText(cursor.getString(cursor.getColumnIndex(TableNames.table0.mName)));
+                holder.mItemName.setText(formatName(cursor.getString(cursor.getColumnIndex(TableNames.table0.mName))));
+                setImage(holder,makeUrl(cursor.getString(cursor.getColumnIndex(TableNames.table0.mPhotoUrl))));
             }
         }catch (NullPointerException e){
             e.printStackTrace();
@@ -78,6 +93,59 @@ public class ObserverAdapter  extends RecyclerView.Adapter<ObserverAdapter.MyVie
             }
         }
         setAnimation(holder.itemView, position);
+    }
+
+    private void setImage(final MyViewHolder holder, String url){
+        RetroFitApiCalls apiClass = getStudentImageClient().create(RetroFitApiCalls.class);
+        apiClass.getStudentImage(url).enqueue(new Callback<ResponseBody>() {
+            @Override
+            public void onResponse(@NonNull Call<ResponseBody> call, @NonNull Response<ResponseBody> response) {
+                if(response.isSuccessful()&&response.body()!=null){
+                    Bitmap image = BitmapFactory.decodeStream(response.body().byteStream());
+                    holder.mItemImage.setImageBitmap(image);
+                    holder.mItemImage.setScaleType(ImageView.ScaleType.CENTER_CROP);
+                }
+            }
+            @Override
+            public void onFailure(@NonNull Call<ResponseBody> call, @NonNull Throwable t) {
+                Log.d(TAG, t.getMessage());
+            }
+        });
+    }
+
+    private String formatName(String name){
+        name = name.toLowerCase().trim();
+        String formattedName = "";
+        formattedName += Character.toUpperCase(name.charAt(0));
+        for(int i=1;i<name.length();i++){
+            char c = name.charAt(i);
+            if(c == ' '){
+                formattedName += " "+Character.toUpperCase(name.charAt(i+1));
+                i++;
+            }else {
+                formattedName +=c;
+            }
+        }
+        return formattedName;
+    }
+
+    private String makeUrl(String url){
+        return url.replace("%3A",":").replace("%2F","/");
+    }
+
+    private Retrofit getStudentImageClient() {
+        HttpLoggingInterceptor interceptor = new HttpLoggingInterceptor();
+        interceptor.setLevel(HttpLoggingInterceptor.Level.BODY);
+        OkHttpClient client = new OkHttpClient.Builder().addInterceptor(interceptor).build();
+        if (mRetrofit == null) {
+            mRetrofit = new Retrofit.Builder()
+                    .client(client)
+                    .baseUrl(mContext.getResources().getString(R.string.serverBaseUrl))
+                    .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
+                    .addConverterFactory(GsonConverterFactory.create())
+                    .build();
+        }
+        return mRetrofit;
     }
 
     @Override
@@ -153,14 +221,6 @@ public class ObserverAdapter  extends RecyclerView.Adapter<ObserverAdapter.MyVie
         }
         mNotifyInterface.notifyChange();
         notifyDataSetChanged();
-    }
-
-    public List<String> getMarkedCount(){
-        return mPresentList;
-    }
-
-    public void resetMarked(){
-
     }
 
 

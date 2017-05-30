@@ -92,6 +92,7 @@ public class TripSummaryActivity extends AppCompatActivity {
 
     @Override
     public boolean onSupportNavigateUp() {
+        finish();
         Intent startMain = new Intent(TripSummaryActivity.this, MainActivity.class);
         startMain.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
         startMain.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
@@ -106,6 +107,7 @@ public class TripSummaryActivity extends AppCompatActivity {
 
     @Override
     public void onBackPressed() {
+        finish();
         Intent startMain = new Intent(TripSummaryActivity.this, MainActivity.class);
         startMain.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
         startMain.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);

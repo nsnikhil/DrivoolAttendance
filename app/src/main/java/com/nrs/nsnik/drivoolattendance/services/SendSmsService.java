@@ -3,6 +3,9 @@ package com.nrs.nsnik.drivoolattendance.services;
 
 import android.app.IntentService;
 import android.content.Intent;
+import android.content.SharedPreferences;
+import android.preference.PreferenceFragment;
+import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.Log;
@@ -26,6 +29,10 @@ public class SendSmsService extends IntentService {
 
     private Retrofit mRetrofit;
     private static final String TAG = SendSmsService.class.getSimpleName();
+    private static final String NULL_VALUE = "N/A";
+    private SharedPreferences mPreferences;
+    private String mBaseSmsUrl;
+    private String mExtraUrl;
 
     public SendSmsService() {
         super("SmsService");
@@ -33,6 +40,11 @@ public class SendSmsService extends IntentService {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
+        mPreferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+        mBaseSmsUrl = mPreferences.getString(getResources().getString(R.string.prefSmsBaseKey)
+                ,getResources().getString(R.string.smsBaseUrl));
+        mExtraUrl = mPreferences.getString(getResources().getString(R.string.prefSmsExtraKey)
+                ,getResources().getString(R.string.smsExtraUrl));
         sendSms(intent);
         return super.onStartCommand(intent, flags, startId);
     }
@@ -51,7 +63,7 @@ public class SendSmsService extends IntentService {
         if (mRetrofit == null) {
             mRetrofit = new Retrofit.Builder()
                     .client(client)
-                    .baseUrl(getResources().getString(R.string.smsBaseUrl))
+                    .baseUrl(mBaseSmsUrl)
                     .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
                     .addConverterFactory(GsonConverterFactory.create())
                     .build();
@@ -59,9 +71,9 @@ public class SendSmsService extends IntentService {
         return mRetrofit;
     }
 
-    private void sendSms(Intent inetnt){
+    private void sendSms(Intent intent){
         RetroFitApiCalls apiCalls = getSmsClient().create(RetroFitApiCalls.class);
-        apiCalls.sendSms(getParams(inetnt)).enqueue(new Callback<Void>() {
+        apiCalls.sendSmsUrl(mExtraUrl,getParams(intent)).enqueue(new Callback<Void>() {
             @Override
             public void onResponse(@NonNull Call<Void> call, @NonNull Response<Void> response) {
                 Log.d(TAG, "Send");

@@ -25,6 +25,23 @@
             android:id="@+id/mainViewPager"
             style="@style/matchParent"/>
 
+        <TextView
+            android:background="@drawable/circle"
+            android:backgroundTint="#CC212121"
+            android:textColor="@color/white"
+            android:id="@+id/mainCounter"
+            android:visibility="gone"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            android:fontFamily="sans-serif-light"
+            android:gravity="center"
+            android:layout_width="72dp"
+            android:layout_height="72dp"
+            android:layout_margin="@dimen/sixteen"
+            android:layout_centerHorizontal="true"
+            android:layout_alignParentBottom="true"
+            style="@style/wrapContent"/>
+
     </RelativeLayout>
 
 

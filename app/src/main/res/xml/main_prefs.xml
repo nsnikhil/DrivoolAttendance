@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+    <PreferenceCategory android:title="@string/prefCatUrl">
+
+        <EditTextPreference
+            android:id="@+id/prefBaseUrl"
+            android:defaultValue="@string/serverBaseUrl"
+            android:key="@string/prefServerBaseKey"
+            android:title="@string/prefServerBaseUrl" />
+
+        <EditTextPreference
+            android:id="@+id/prefBaseExUrl"
+            android:defaultValue="@string/serverExtraParams"
+            android:key="@string/prefServerExtraKey"
+            android:title="@string/prefServerExtraUrl" />
+
+        <EditTextPreference
+            android:id="@+id/prefSmsUrl"
+            android:defaultValue="@string/smsBaseUrl"
+            android:key="@string/prefSmsBaseKey"
+            android:title="@string/prefSmsBaseUrl" />
+
+        <EditTextPreference
+            android:id="@+id/prefSmsExUrl"
+            android:defaultValue="@string/smsExtraUrl"
+            android:key="@string/prefSmsExtraKey"
+            android:title="@string/prefSmsExtraUrl" />
+
+    </PreferenceCategory>
+</PreferenceScreen>
